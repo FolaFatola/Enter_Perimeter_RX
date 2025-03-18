@@ -10,6 +10,9 @@
 
 #include "rtc_error_codes.hpp"
 #include "stdint.h"
+#include "stm32f4xx_hal.h"
+
+#define DEVICE_ADDR 0xD0 			//device address of the ds1307
 
 //Register addresses within the Ds1307 RTC
 #define SECONDS_REG 	0x00
@@ -21,12 +24,17 @@
 #define	YEAR_REG		0x06
 #define	CONTROL_REG		0x07
 
+#define MEM_ADDR_SIZE 	0x01		//8-bit or byte addresses
+
+#define TIMEOUT 		100 		//100 ms timeout
+
 
 typedef struct Time_TypeDef {
 	uint8_t second_;
 	uint8_t minute_;
 	uint8_t hour_;
-	uint8_t day_;
+	uint8_t week_day_;
+	uint8_t date_day_;
 	uint8_t month_;
 	uint8_t year_;
 }Time_TypeDef;
@@ -34,22 +42,19 @@ typedef struct Time_TypeDef {
 
 class Time_RTC {
 public:
-	Time_RTC(bool military_time);
-	RTC_Status_E rtc_set_reg(uint8_t *register_address);
-	RTC_Status_E rtc_read_reg(uint8_t *register_address);
+	Time_RTC(I2C_HandleTypeDef *i2c_handle, bool use_military_time);
+	RTC_Status_E rtc_set_reg(uint8_t register_address, uint8_t transmit_data);
 	RTC_Status_E rtc_init(Time_TypeDef* curr_time);
+	RTC_Status_E rtc_read_reg(uint8_t register_address, uint8_t *recv_data);
 	RTC_Status_E rtc_get_time(Time_TypeDef* curr_time);
 
 private:
-	Time_TypeDef time_;
+	Time_TypeDef *time_;
+	I2C_HandleTypeDef *i2c_handle_;
+
 	bool military_time_;
 	bool time_init_;
 };
-
-
-
-
-
 
 
 

@@ -10,11 +10,11 @@
 
 typedef enum RTC_Status_E {
 	RTC_OK,
+	RTC_NULL_I2C_HANDLE,
 	RTC_INIT_FAIL,
-	RTC_RECV_FAI
+	RTC_RECV_FAIL,
+	RTC_BCD_CONV_FAIL
 } RTC_Status_E;
-
-
 
 
 
