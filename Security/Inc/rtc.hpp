@@ -8,6 +8,7 @@
 #ifndef SECURITY_INC_RTC_HPP_
 #define SECURITY_INC_RTC_HPP_
 
+#include <time.hpp>
 #include "rtc_error_codes.hpp"
 #include "stdint.h"
 #include "stm32f4xx_hal.h"
@@ -54,6 +55,9 @@ private:
 
 	bool military_time_;
 	bool time_init_;
+
+	RTC_Status_E from_decimal_to_bcd(Time_TypeDef time, uint8_t decimal_num, uint8_t &bcd_ret_val);
+	RTC_Status_E from_bcd_to_decimal(Time_TypeDef time, uint8_t bcd_num, uint8_t &decimal_ret_val);
 };
 
 
