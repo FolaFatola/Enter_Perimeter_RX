@@ -28,8 +28,8 @@ TimeManager::TimeManager(uint8_t seconds, uint8_t minutes, uint8_t hours, uint8_
 	}
 
 	passage_of_time_.week_day_.time_type = week_day_type;
-	passage_of_time_.minutes_.time_value = week_day;
-	passage_of_time_.minutes_.max_time = 7;
+	passage_of_time_.week_day_.time_value = week_day;
+	passage_of_time_.week_day_.max_time = 7;
 
 	passage_of_time_.month_.time_type = month_type;
 	passage_of_time_.month_.time_value = month;
@@ -57,7 +57,7 @@ TimeManager::TimeManager(uint8_t seconds, uint8_t minutes, uint8_t hours, uint8_
 
 RTC_Status_E TimeManager::convert_decimal_time_to_bcd() {
 
-    Time_TypeDef* decimal_time[7] = {&passage_of_time_.seconds_, &passage_of_time_.minutes_, &passage_of_time_.hours_,
+    Time_TypeDef* decimal_time[7] = {&passage_of_time_.seconds_, &(passage_of_time_.minutes_), &passage_of_time_.hours_,
     		&passage_of_time_.week_day_, &passage_of_time_.date_day_, &passage_of_time_.month_, &passage_of_time_.year_};
 
     for (int tim_unit_idx = 0; tim_unit_idx < 7; ++tim_unit_idx) {
