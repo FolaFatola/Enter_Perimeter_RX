@@ -8,7 +8,7 @@
 #ifndef SECURITY_INC_RTC_HPP_
 #define SECURITY_INC_RTC_HPP_
 
-#include <time.hpp>
+#include "time.hpp"
 #include "rtc_error_codes.hpp"
 #include "stdint.h"
 #include "stm32f4xx_hal.h"
@@ -30,34 +30,22 @@
 #define TIMEOUT 		100 		//100 ms timeout
 
 
-typedef struct Time_TypeDef {
-	uint8_t second_;
-	uint8_t minute_;
-	uint8_t hour_;
-	uint8_t week_day_;
-	uint8_t date_day_;
-	uint8_t month_;
-	uint8_t year_;
-}Time_TypeDef;
-
-
 class Time_RTC {
 public:
-	Time_RTC(I2C_HandleTypeDef *i2c_handle, bool use_military_time);
+	Time_RTC(I2C_HandleTypeDef *i2c_handle, bool use_military_time,
+			uint8_t seconds, uint8_t minutes,
+			uint8_t hours, uint8_t week_day,
+			uint8_t date_day, uint8_t month, uint8_t year);
 	RTC_Status_E rtc_set_reg(uint8_t register_address, uint8_t transmit_data);
-	RTC_Status_E rtc_init(Time_TypeDef* curr_time);
+	RTC_Status_E rtc_init();
 	RTC_Status_E rtc_read_reg(uint8_t register_address, uint8_t *recv_data);
-	RTC_Status_E rtc_get_time(Time_TypeDef* curr_time);
+	RTC_Status_E rtc_get_time();
 
 private:
-	Time_TypeDef *time_;
 	I2C_HandleTypeDef *i2c_handle_;
-
 	bool military_time_;
 	bool time_init_;
-
-	RTC_Status_E from_decimal_to_bcd(Time_TypeDef time, uint8_t decimal_num, uint8_t &bcd_ret_val);
-	RTC_Status_E from_bcd_to_decimal(Time_TypeDef time, uint8_t bcd_num, uint8_t &decimal_ret_val);
+	TimeManager time_;
 };
 
 
