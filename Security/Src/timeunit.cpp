@@ -6,11 +6,11 @@
  */
 
 
-#include <time.hpp>
+#include "timeunit.hpp"
 #include <climits>
 
 
-TimeManager::TimeManager(uint8_t seconds, uint8_t minutes, uint8_t hours, uint8_t week_day, uint8_t date_day, uint8_t month, uint8_t year, bool use_military_time) {
+TimeManager::TimeManager(uint8_t seconds, uint8_t minutes, uint8_t hours, uint8_t week_day, uint8_t date_day, uint8_t month, int year, bool use_military_time) {
 	passage_of_time_.seconds_.time_type = seconds_type;
 	passage_of_time_.seconds_.time_value = seconds;
 	passage_of_time_.seconds_.max_time = 60;
@@ -22,9 +22,9 @@ TimeManager::TimeManager(uint8_t seconds, uint8_t minutes, uint8_t hours, uint8_
 	passage_of_time_.hours_.time_type = hours_type;
 	passage_of_time_.hours_.time_value = hours;
 	if (use_military_time) {
-		passage_of_time_.hours_.max_time = 12;
-	} else {
 		passage_of_time_.hours_.max_time = 24;
+	} else {
+		passage_of_time_.hours_.max_time = 12;
 	}
 
 	passage_of_time_.week_day_.time_type = week_day_type;

@@ -8,7 +8,7 @@
 #ifndef SECURITY_INC_RTC_HPP_
 #define SECURITY_INC_RTC_HPP_
 
-#include "time.hpp"
+#include "timeunit.hpp"
 #include "rtc_error_codes.hpp"
 #include "stdint.h"
 #include "stm32f4xx_hal.h"
@@ -35,7 +35,7 @@ public:
 	Time_RTC(I2C_HandleTypeDef *i2c_handle, bool use_military_time,
 			uint8_t seconds, uint8_t minutes,
 			uint8_t hours, uint8_t week_day,
-			uint8_t date_day, uint8_t month, uint8_t year);
+			uint8_t date_day, uint8_t month, int year);
 	RTC_Status_E rtc_set_reg(uint8_t register_address, uint8_t transmit_data);
 	RTC_Status_E rtc_init();
 	RTC_Status_E rtc_read_reg(uint8_t register_address, uint8_t *recv_data);

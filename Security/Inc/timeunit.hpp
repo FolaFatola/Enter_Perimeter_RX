@@ -5,11 +5,10 @@
  *      Author: folafatola
  */
 
-#ifndef INC_TIME_HPP_
-#define INC_TIME_HPP_
+#ifndef INC_TIME_UNIT_HPP_
+#define INC_TIME_UNIT_HPP_
 
 #include <stdint.h>
-#include <tuple>
 #include "rtc_error_codes.hpp"
 
 #define JANUARY 1
@@ -52,7 +51,7 @@ constexpr uint8_t year_type = 1 << 6;
 typedef struct Time_TypeDef {
 	uint8_t time_type;				//a bit-field representing the current time type
 	int time_value;					//The actual time unit measurement.
-	uint8_t max_time;				//the max time that can be represented by the time type.
+	int max_time;				//the max time that can be represented by the time type.
 }Time_TypeDef;
 
 typedef struct TimeUnit {
@@ -67,7 +66,7 @@ typedef struct TimeUnit {
 
 class TimeManager {
 public:
-	TimeManager(uint8_t seconds, uint8_t minutes, uint8_t hours, uint8_t week_day, uint8_t date_day, uint8_t month, uint8_t year, bool use_military_time);
+	TimeManager(uint8_t seconds, uint8_t minutes, uint8_t hours, uint8_t week_day, uint8_t date_day, uint8_t month, int year, bool use_military_time);
 	TimeUnit getTimeUnit() { return passage_of_time_;}
 	RTC_Status_E convert_decimal_time_to_bcd();
 	RTC_Status_E convert_bcd_time_to_decimal();
@@ -77,4 +76,4 @@ private:
 };
 
 
-#endif /* INC_TIME_HPP_ */
+#endif /* INC_TIME_UNIT_HPP_ */

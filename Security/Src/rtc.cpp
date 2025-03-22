@@ -12,7 +12,7 @@
 Time_RTC::Time_RTC(I2C_HandleTypeDef *i2c_handle, bool use_military_time,
 		uint8_t seconds, uint8_t minutes,
 		uint8_t hours, uint8_t week_day,
-		uint8_t date_day, uint8_t month, uint8_t year) :
+		uint8_t date_day, uint8_t month, int year) :
 	i2c_handle_{i2c_handle}, military_time_{use_military_time}, time_init_{true},
 	time_{TimeManager(seconds, minutes, hours, week_day, date_day, month, year, use_military_time)}{
 
