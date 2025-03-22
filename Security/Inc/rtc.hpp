@@ -29,7 +29,6 @@
 
 #define TIMEOUT 		100 		//100 ms timeout
 
-
 class Time_RTC {
 public:
 	Time_RTC(I2C_HandleTypeDef *i2c_handle, bool use_military_time,

@@ -1,9 +1,15 @@
+/*
+ * test.cpp
+ *
+ *  Created on: Mar 22, 2025
+ *      Author: folafatola
+ */
+
 #include "test.hpp"
 #include "timeunit.hpp"
 #include <stdint.h>
 
-
-class TimeTest :  public testing::Test {
+class TimeTest : public testing::Test {
 protected:
     TimeTest() {
 
