@@ -35,16 +35,32 @@ public:
 			uint8_t seconds, uint8_t minutes,
 			uint8_t hours, uint8_t week_day,
 			uint8_t date_day, uint8_t month, int year);
-	RTC_Status_E rtc_set_reg(uint8_t register_address, uint8_t transmit_data);
+
 	RTC_Status_E rtc_init();
+
+
+	RTC_Status_E rtc_write_reg(uint8_t register_address, uint8_t *transmit_data);
 	RTC_Status_E rtc_read_reg(uint8_t register_address, uint8_t *recv_data);
-	RTC_Status_E rtc_get_time();
+
+
+
+	RTC_Status_E rtc_get_seconds(uint8_t &num_seconds);
+	RTC_Status_E rtc_get_minutes(uint8_t &num_minutes);
+	RTC_Status_E rtc_get_hours(uint8_t &num_hours);
+	RTC_Status_E rtc_get_date_day(uint8_t &date_day);
+	RTC_Status_E rtc_get_week_day(uint8_t &week_day);
+	RTC_Status_E rtc_get_month(uint8_t &month);
+	RTC_Status_E rtc_get_year(int &year);
 
 private:
 	I2C_HandleTypeDef *i2c_handle_;
 	bool military_time_;
 	bool time_init_;
-	TimeManager time_;
+	TimeManager tim_manager_;
+
+	RTC_Status_E rtc_get_all_time();
+
+
 };
 
 
