@@ -11,7 +11,7 @@ Time_RTC::Time_RTC(I2C_HandleTypeDef *i2c_handle, bool use_military_time,
 		uint8_t seconds, uint8_t minutes,
 		uint8_t hours, uint8_t week_day,
 		uint8_t date_day, uint8_t month, int year) :
-	i2c_handle_{i2c_handle}, military_time_{use_military_time}, time_init_{true},
+	i2c_handle_{i2c_handle}, military_time_{use_military_time},
 	tim_manager_{TimeManager(seconds, minutes, hours, week_day, date_day, month, year, use_military_time)}{}
 
 
@@ -43,6 +43,7 @@ RTC_Status_E Time_RTC::rtc_read_reg(uint8_t register_address, uint8_t *recv_data
 RTC_Status_E Time_RTC::rtc_init() {
 	RTC_Status_E status = RTC_OK;
 
+	//rtc register stores data in bcd format.
 	status = tim_manager_.convert_decimal_time_to_bcd();
 
 	if (status != RTC_OK) {
@@ -51,6 +52,8 @@ RTC_Status_E Time_RTC::rtc_init() {
 
 	TimeSpan time_span = tim_manager_.getTimeSpan();
 
+	//fetch the initial values for each of the units of time.
+	//Each value of time will be written to a register corresponding to its unit.
 	uint8_t seconds = time_span.seconds_.time_value;
 	uint8_t minutes = time_span.minutes_.time_value;
 	uint8_t hours = time_span.hours_.time_value;
@@ -67,8 +70,9 @@ RTC_Status_E Time_RTC::rtc_init() {
 
 	for (int time_unit_idx = 0; time_unit_idx < 7; ++time_unit_idx) {
 		uint8_t *p_transmit = &(bcd_time[time_unit_idx]);
+		//write the time values to the time registers.
 		status = rtc_write_reg(time_registers[time_unit_idx], p_transmit);
-		if (status != RTC_OK) {
+		if (status != RTC_OK) {			//if the write fails, return error code.
 			return status;
 		}
 	}
@@ -96,7 +100,7 @@ RTC_Status_E Time_RTC::rtc_get_all_time() {
 	//set the time units inside the timer manager.
 	tim_manager_.setTime(time_unit_values[0], time_unit_values[1], time_unit_values[2],
 			time_unit_values[3], time_unit_values[4], time_unit_values[5], time_unit_values[6]);
-	tim_manager_.convert_bcd_time_to_decimal();
+	tim_manager_.convert_bcd_time_to_decimal();		//convert bcd time to decimal to return to the user.
 
 	return RTC_OK;
 }

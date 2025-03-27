@@ -12,7 +12,6 @@
 #include "rtc_error_codes.hpp"
 
 
-
 #define JANUARY 1
 #define FEBRUARY 2
 #define MARCH 3
@@ -50,10 +49,10 @@ typedef enum Time_Type_E {
 typedef struct TimeUnit {
 	Time_Type_E time_type;				//a bit-field representing the current time type
 	uint8_t time_value;					//The actual time unit measurement.
-	uint8_t max_time;				//the max time that can be represented by the time type.
+	uint8_t max_time;					//the max time that can be represented by the time type.
 }TimeUnit;
 
-typedef struct TimeSpan {
+typedef struct TimeSpan {			//A data type of different time units.
 	TimeUnit seconds_;
 	TimeUnit minutes_;
 	TimeUnit hours_;
@@ -65,14 +64,60 @@ typedef struct TimeSpan {
 
 class TimeManager {
 public:
+	/*
+	 * Initializes time manager with the start time
+	 *
+	 * Param(s):
+	 * i2c_handle -> pointer to stm32 i2c handle.
+	 * use_military_time -> variable choice between 12- and 24-hour time.
+	 * seconds -> start time in seconds
+	 * minutes -> start time in minutes
+	 * hours -> start time in hours
+	 * week_day -> start time in week days
+	 * date_day -> start time in day of month
+	 * month -> start time in months
+	 * year -> star time in years
+	 *
+	 * return value: none
+	 */
 	TimeManager(uint8_t seconds, uint8_t minutes, uint8_t hours, uint8_t week_day, uint8_t date_day, uint8_t month, int year, bool use_military_time);
+
+	/*
+	 * Returns an instance of a TimeSpan
+	 * return value: TimeSpan struct instance
+	 */
 	TimeSpan getTimeSpan() { return passage_of_time_;}
+
+	/*
+	 * Modifies the time stored in the time manager (specifically, the "passage_of_time_" member variable)
+	 *
+	 * Param(s):
+	 * seconds -> start time in seconds
+	 * minutes -> start time in minutes
+	 * hours -> start time in hours
+	 * week_day -> start time in week days
+	 * date_day -> start time in day of month
+	 * month -> start time in months
+	 * year -> star time in years
+	 *
+	 * return value: none
+	 */
 	void setTime(uint8_t seconds, uint8_t minutes, uint8_t hours, uint8_t week_day, uint8_t date_day, uint8_t month, int year);
+
+	/*
+	 * Converts stored decimal time into bcd format.
+	 * return value: RTC_Status_E -> RTC data error code.
+	 */
 	RTC_Status_E convert_decimal_time_to_bcd();
+
+	/*
+	 * Converts stored bcd time into decimal format.
+	 * return value: RTC_Status_E -> RTC data error code.
+	 */
 	RTC_Status_E convert_bcd_time_to_decimal();
 
 private:
-	TimeSpan passage_of_time_;
+	TimeSpan passage_of_time_;				//variable storing time data.
 };
 
 
