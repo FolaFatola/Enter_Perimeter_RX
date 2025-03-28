@@ -50,7 +50,7 @@ typedef struct TimeUnit {
 	Time_Type_E time_type;				//a bit-field representing the current time type
 	uint8_t time_value;					//The actual time unit measurement.
 	uint8_t max_time;					//the max time that can be represented by the time type.
-}TimeUnit;
+} TimeUnit;
 
 typedef struct TimeSpan {			//A data type of different time units.
 	TimeUnit seconds_;
