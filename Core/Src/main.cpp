@@ -443,6 +443,7 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
 				difference = (ic_val2 - 0) + (htim->Instance->ARR  - ic_val1);
 			}
 
+
 			double granularity_ms = 10.0 / htim->Instance->ARR; //granularity of 0.15625 milliseconds per tick.
 
 			double milliseconds = (double)difference * granularity_ms;
