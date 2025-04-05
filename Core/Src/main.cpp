@@ -20,12 +20,10 @@
 #include "main.h"
 #include <cstdio>
 #include "rtc.hpp"
+#include "hcsr04.hpp"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-volatile bool first_edge = 0;
-volatile uint16_t ic_val1 = 0;
-volatile uint16_t ic_val2 = 0;
 
 /* USER CODE END Includes */
 
@@ -65,22 +63,11 @@ static void MX_TIM2_Init(void);
 static void MX_TIM1_Init(void);
 /* USER CODE BEGIN PFP */
 
-void delay_microseconds(uint8_t microseconds) {
-	uint16_t target_cnt_value = microseconds * 64;
-	if (target_cnt_value > htim1.Instance->ARR) {
-		return;
-	}
-
-	htim1.Instance->CNT = 0; //reset the count register.
-	while(htim1.Instance->CNT < target_cnt_value){}
-}
-
-
-
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+volatile DistCaptParams g_dist_capt_params{0};
 
 /* USER CODE END 0 */
 
@@ -120,9 +107,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   HAL_TIM_Base_Start(&htim1);				//start base timer
-//  HAL_TIM_IC_Init(&htim2);
   HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_1); //start input capture timer.
-
 
   uint8_t num_seconds = 58;
   uint8_t num_minutes = 44;
@@ -133,11 +118,11 @@ int main(void)
   int year = 2025;
 
   Time_RTC clock(&hi2c2, true, num_seconds, num_minutes, num_hours, date_day, week_day, month, year);
+  HC_SR04 distance_sensor(GPIOA, GPIO_PIN_1, &htim2, &htim1);
+
   RTC_Status_E status = clock.rtc_init();
+  double distance = 0;
   char message[100];
-
-  HAL_GPIO_WritePin(Trig_GPIO_Port, Trig_Pin, GPIO_PIN_RESET);
-
 
   /* USER CODE END 2 */
 
@@ -145,34 +130,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  //	status = clock.rtc_get_seconds(num_seconds);
-	  //	status = clock.rtc_get_minutes(num_minutes);
-	  //	status = clock.rtc_get_hours(num_hours);
-	  //	status = clock.rtc_get_date_day(date_day);
-	  //	status = clock.rtc_get_week_day(week_day);
-	  //	status = clock.rtc_get_month(month);
-	  //	status = clock.rtc_get_year(year);
-	  //
-	  //	HAL_UART_Transmit(&huart2, (uint8_t *)message, sprintf(message, "secs: %d, mins: %d, hours: %d, day: %d, "
-	  //			  "week_day: %d, month %d, year %d\r\n", num_seconds, num_minutes, num_hours, date_day, week_day,
-	  //			  month, year), 100);
-
-//	  //Trigger the echo pin.
-	  HAL_GPIO_WritePin(Trig_GPIO_Port, Trig_Pin, GPIO_PIN_SET);
-	  delay_microseconds(10);
-	  HAL_GPIO_WritePin(Trig_GPIO_Port, Trig_Pin, GPIO_PIN_RESET);
-
-	  HAL_Delay(100);
-
-//	  HAL_GPIO_WritePin()
-
-
-
-
-
-//	char message[100] = "Live and learn!\r\n";
-//	HAL_UART_Transmit(&huart2, (uint8_t *)message, strlen(message), 100);
-//	HAL_Delay(100);
+	  distance = distance_sensor.getDistance(g_dist_capt_params);
+	  HAL_UART_Transmit(&huart2, (uint8_t *)message, sprintf(message, "The distance is %lf cm\r\n", distance), 100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -413,14 +372,14 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(Trig_GPIO_Port, Trig_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : Trig_Pin */
-  GPIO_InitStruct.Pin = Trig_Pin;
+  /*Configure GPIO pin : PA1 */
+  GPIO_InitStruct.Pin = GPIO_PIN_1;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(Trig_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
@@ -428,35 +387,16 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
-
 	if (htim->Instance == TIM2) {
-		if (!first_edge) {
-			ic_val1 = htim->Instance->CCR1;
-			first_edge = true;
+		if (!g_dist_capt_params.recv_first_edge_) {
+			g_dist_capt_params.ic_val1_ = htim->Instance->CCR1;
+			g_dist_capt_params.recv_first_edge_ = true;
 		} else {
-			ic_val2 = htim->Instance->CCR1;
-			first_edge = false;
-			uint16_t difference = 0;
-			if (ic_val2 > ic_val1) {
-				difference = ic_val2 - ic_val1;
-			} else if (ic_val1 > ic_val2) {
-				difference = (ic_val2 - 0) + (htim->Instance->ARR  - ic_val1);
-			}
-
-
-			double granularity_ms = 10.0 / htim->Instance->ARR; //granularity of 0.15625 milliseconds per tick.
-
-			double milliseconds = (double)difference * granularity_ms;
-			double distance = milliseconds * 34.300;
-
-			char message[100];
-			HAL_UART_Transmit(&huart2, (uint8_t *)message, sprintf(message, "The distance is %lf cm\r\n", distance),100);
-
+			g_dist_capt_params.ic_val2_ = htim->Instance->CCR1;
+			g_dist_capt_params.recv_first_edge_ = false;
 		}
-
 	}
 }
-
 
 /* USER CODE END 4 */
 
