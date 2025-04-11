@@ -20,7 +20,6 @@
 #include "main.h"
 #include <cstdio>
 #include "rtc.hpp"
-#include "hcsr04.hpp"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -67,7 +66,6 @@ static void MX_TIM1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-volatile DistCaptParams g_dist_capt_params{0};
 
 /* USER CODE END 0 */
 
@@ -118,7 +116,6 @@ int main(void)
   int year = 2025;
 
   Time_RTC clock(&hi2c2, true, num_seconds, num_minutes, num_hours, date_day, week_day, month, year);
-  HC_SR04 distance_sensor(GPIOA, GPIO_PIN_1, &htim2, &htim1);
 
   RTC_Status_E status = clock.rtc_init();
   double distance = 0;
@@ -130,8 +127,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  distance = distance_sensor.getDistance(g_dist_capt_params);
-	  HAL_UART_Transmit(&huart2, (uint8_t *)message, sprintf(message, "The distance is %lf cm\r\n", distance), 100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -386,17 +381,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
-	if (htim->Instance == TIM2) {
-		if (!g_dist_capt_params.recv_first_edge_) {
-			g_dist_capt_params.ic_val1_ = htim->Instance->CCR1;
-			g_dist_capt_params.recv_first_edge_ = true;
-		} else {
-			g_dist_capt_params.ic_val2_ = htim->Instance->CCR1;
-			g_dist_capt_params.recv_first_edge_ = false;
-		}
-	}
-}
 
 /* USER CODE END 4 */
 
