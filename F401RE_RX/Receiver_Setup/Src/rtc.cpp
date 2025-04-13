@@ -68,9 +68,8 @@ RTC_Status_E Time_RTC::rtc_init() {
 			WEEK_DAY_REG, DATE_DAY_REG, MONTH_REG, YEAR_REG};
 
 	for (int time_unit_idx = 0; time_unit_idx < 7; ++time_unit_idx) {
-		uint8_t *p_transmit = &(bcd_time[time_unit_idx]);
 		//write the time values to the time registers.
-		status = rtc_write_reg(time_registers[time_unit_idx], p_transmit);
+		status = rtc_write_reg(time_registers[time_unit_idx], &(bcd_time[time_unit_idx]));
 		if (status != RTC_OK) {			//if the write fails, return error code.
 			return status;
 		}
