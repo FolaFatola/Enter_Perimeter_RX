@@ -1,0 +1,91 @@
+20:17:09 **** Incremental Build of configuration Debug for project F401RE_RX ****
+make -j3 all 
+arm-none-eabi-g++ "../Core/Src/main.cpp" -mcpu=cortex-m4 -std=gnu++14 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F401xE -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -I../Receiver_Setup/Inc -O0 -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti -fno-use-cxa-atexit -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+../Core/Src/main.cpp: In function 'int main()':
+../Core/Src/main.cpp:105:18: warning: unsigned conversion from 'int' to 'uint8_t' {aka 'unsigned char'} changes value from '2025' to '233' [-Woverflow]
+  105 |   uint8_t year = 2025;
+      |                  ^~~~
+arm-none-eabi-g++ -o "F401RE_RX.elf" @"objects.list"   -mcpu=cortex-m4 -T"/Users/folafatola/Github_Projects/Enter_Perimeter/F401RE_RX/STM32F401RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="F401RE_RX.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
+Finished building target: F401RE_RX.elf
+ 
+arm-none-eabi-size  F401RE_RX.elf 
+arm-none-eabi-objdump -h -S F401RE_RX.elf  > "F401RE_RX.list"
+   text	   data	    bss	    dec	    hex	filename
+  17204	     92	   2060	  19356	   4b9c	F401RE_RX.elf
+Finished building: default.size.stdout
+ 
+Finished building: F401RE_RX.list
+ 
+20:17:15 **** Incremental Build of configuration Debug for project F401RE_RX ****
+make -j3 all 
+arm-none-eabi-size  F401RE_RX.elf 
+   text	   data	    bss	    dec	    hex	filename
+  17204	     92	   2060	  19356	   4b9c	F401RE_RX.elf
+Finished building: default.size.stdout
+ 
+20:17:43 **** Incremental Build of configuration Debug for project F401RE_RX ****
+make -j3 all 
+arm-none-eabi-g++ "../Core/Src/main.cpp" -mcpu=cortex-m4 -std=gnu++14 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F401xE -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -I../Receiver_Setup/Inc -O0 -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti -fno-use-cxa-atexit -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-g++ -o "F401RE_RX.elf" @"objects.list"   -mcpu=cortex-m4 -T"/Users/folafatola/Github_Projects/Enter_Perimeter/F401RE_RX/STM32F401RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="F401RE_RX.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
+Finished building target: F401RE_RX.elf
+ 
+arm-none-eabi-size  F401RE_RX.elf 
+arm-none-eabi-objdump -h -S F401RE_RX.elf  > "F401RE_RX.list"
+   text	   data	    bss	    dec	    hex	filename
+  17204	     92	   2060	  19356	   4b9c	F401RE_RX.elf
+Finished building: default.size.stdout
+ 
+Finished building: F401RE_RX.list
+ 
+20:18:13 **** Incremental Build of configuration Debug for project F401RE_RX ****
+make -j3 all 
+arm-none-eabi-g++ "../Core/Src/main.cpp" -mcpu=cortex-m4 -std=gnu++14 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F401xE -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -I../Receiver_Setup/Inc -O0 -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti -fno-use-cxa-atexit -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-g++ -o "F401RE_RX.elf" @"objects.list"   -mcpu=cortex-m4 -T"/Users/folafatola/Github_Projects/Enter_Perimeter/F401RE_RX/STM32F401RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="F401RE_RX.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
+Finished building target: F401RE_RX.elf
+ 
+arm-none-eabi-size  F401RE_RX.elf 
+arm-none-eabi-objdump -h -S F401RE_RX.elf  > "F401RE_RX.list"
+   text	   data	    bss	    dec	    hex	filename
+  17196	     92	   2060	  19348	   4b94	F401RE_RX.elf
+Finished building: default.size.stdout
+ 
+Finished building: F401RE_RX.list
+ 
+20:22:16 **** Incremental Build of configuration Debug for project F401RE_RX ****
+make -j3 all 
+arm-none-eabi-g++ "../Receiver_Setup/Src/rtc.cpp" -mcpu=cortex-m4 -std=gnu++14 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F401xE -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -I../Receiver_Setup/Inc -O0 -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti -fno-use-cxa-atexit -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Receiver_Setup/Src/rtc.d" -MT"Receiver_Setup/Src/rtc.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Receiver_Setup/Src/rtc.o"
+arm-none-eabi-g++ -o "F401RE_RX.elf" @"objects.list"   -mcpu=cortex-m4 -T"/Users/folafatola/Github_Projects/Enter_Perimeter/F401RE_RX/STM32F401RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="F401RE_RX.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
+Finished building target: F401RE_RX.elf
+ 
+arm-none-eabi-size  F401RE_RX.elf 
+arm-none-eabi-objdump -h -S F401RE_RX.elf  > "F401RE_RX.list"
+   text	   data	    bss	    dec	    hex	filename
+  17192	     92	   2060	  19344	   4b90	F401RE_RX.elf
+Finished building: default.size.stdout
+ 
+Finished building: F401RE_RX.list
+ 
+20:22:39 **** Incremental Build of configuration Debug for project F401RE_RX ****
+make -j3 all 
+arm-none-eabi-g++ "../Core/Src/main.cpp" -mcpu=cortex-m4 -std=gnu++14 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F401xE -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -I../Receiver_Setup/Inc -O0 -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti -fno-use-cxa-atexit -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+../Core/Src/main.cpp: In function 'int main()':
+../Core/Src/main.cpp:127:83: error: 'millenium' was not declared in this scope; did you mean 'millennium'?
+  127 |                           seconds, minutes, hours, weekday, date_day, month, year+millenium), 100);
+      |                                                                                   ^~~~~~~~~
+      |                                                                                   millennium
+make: *** [Core/Src/subdir.mk:38: Core/Src/main.o] Error 1
+"make -j3 all" terminated with exit code 2. Build might be incomplete.
+20:22:47 **** Incremental Build of configuration Debug for project F401RE_RX ****
+make -j3 all 
+arm-none-eabi-g++ "../Core/Src/main.cpp" -mcpu=cortex-m4 -std=gnu++14 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F401xE -c -I../Core/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc -I../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I../Drivers/CMSIS/Include -I../Receiver_Setup/Inc -O0 -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti -fno-use-cxa-atexit -Wall -fstack-usage -fcyclomatic-complexity -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -o "Core/Src/main.o"
+arm-none-eabi-g++ -o "F401RE_RX.elf" @"objects.list"   -mcpu=cortex-m4 -T"/Users/folafatola/Github_Projects/Enter_Perimeter/F401RE_RX/STM32F401RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="F401RE_RX.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
+Finished building target: F401RE_RX.elf
+ 
+arm-none-eabi-size  F401RE_RX.elf 
+arm-none-eabi-objdump -h -S F401RE_RX.elf  > "F401RE_RX.list"
+   text	   data	    bss	    dec	    hex	filename
+  17200	     92	   2060	  19352	   4b98	F401RE_RX.elf
+Finished building: default.size.stdout
+ 
+Finished building: F401RE_RX.list
+ 

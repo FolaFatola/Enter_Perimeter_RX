@@ -1,0 +1,125 @@
+/*
+ * rtc.hpp
+ *
+ *  Created on: Mar 14, 2025
+ *      Author: Fola Fatola
+ */
+
+#ifndef SECURITY_INC_RTC_HPP_
+#define SECURITY_INC_RTC_HPP_
+
+#include "timeunit.hpp"
+#include "rtc_error_codes.hpp"
+#include "stdint.h"
+#include "stm32f4xx_hal.h"
+
+#define DEVICE_ADDR 0xD0 			//device address of the ds1307
+
+//Register addresses within the Ds1307 RTC
+#define SECONDS_REG 	0x00
+#define MINUTES_REG 	0x01
+#define HOURS_REG 		0x02
+#define WEEK_DAY_REG 	0x03
+#define DATE_DAY_REG	0x04
+#define MONTH_REG		0x05
+#define	YEAR_REG		0x06
+#define	CONTROL_REG		0x07
+
+#define MEM_ADDR_SIZE 	0x01		//8-bit or byte addresses
+
+#define TIMEOUT 		100 		//100 ms timeout for I2c transactions
+
+class Time_RTC {
+public:
+	/*
+	 * Initializes time manager with the start time
+	 *
+	 * Param(s):
+	 * i2c_handle -> pointer to stm32 i2c handle.
+	 * use_twenty_four_hour_time -> variable choice between 12- and 24-hour time.
+	 * seconds -> start time in seconds
+	 * minutes -> start time in minutes
+	 * hours -> start time in hours
+	 * week_day -> start time in week days
+	 * date_day -> start time in day of month
+	 * month -> start time in months
+	 * year -> star time in years
+	 *
+	 * return value: none
+	 */
+	Time_RTC(I2C_HandleTypeDef *i2c_handle, bool use_twenty_four_hour_time,
+			uint8_t seconds, uint8_t minutes,
+			uint8_t hours, uint8_t week_day,
+			uint8_t date_day, uint8_t month, int year);
+
+	/*
+	 * This function converts the stored time into bcd format
+	 * and writes the data involving each unit of time to its
+	 * corresponding RTC register.
+	 *
+	 * Return value: RTC_Status_E -> RTC data error code.
+	 */
+	RTC_Status_E rtc_init();
+
+
+	/*
+	 * Gets the current time in unit specified
+	 *
+	 * Param(s):
+	 * time_unit -> the time unit to be returned
+	 * time_value -> the value of the time unit to be returned
+	 *
+	 * Return value: RTC_Status_E -> RTC data error code.
+	 */
+	RTC_Status_E rtc_get_time_unit(TimeUnit time_unit, int &time_value);
+
+	/*
+	 * Gets the current time in minutes
+	 *
+	 * Param(s):
+	 * num_minutes -> current time in minutes
+	 *
+	 * Return value: RTC_Status_E -> RTC data error code.
+	 */
+	RTC_Status_E rtc_get_minutes(uint8_t &num_minutes);
+private:
+	I2C_HandleTypeDef *i2c_handle_;	//Handle for i2c transactions
+	bool twenty_four_hour_time;			//variable to choose between 12- and 24-hour time
+	TimeManager tim_manager_;		//object that managers the current time and its data format
+
+	/*
+	 * Fetches the current time for each time unit from
+	 * its corresponding RTC register, converts it from
+	 * BCD to decimal format and updates the time stored
+	 * in the time manager.
+	 *
+	 * Return value: RTC_Status_E -> RTC data error code.
+	 */
+	RTC_Status_E rtc_get_all_time();
+
+	/*
+	 * Writes data to a specific RTC register.
+	 *
+	 * Param(s):
+	 * register_address -> address of the RTC register.
+	 * transmit_data -> pointer to the data to write to the register.
+	 *
+	 * Return value: RTC_Status_E -> RTC data error code.
+	 */
+	RTC_Status_E rtc_write_reg(uint8_t register_address, uint8_t *transmit_data);
+
+	/*
+	 * Reads data from a specific RTC register.
+	 *
+	 * Param(s):
+	 * register_address -> address of the RTC register.
+	 * recv_data -> pointer to the data to read from the register.
+	 *
+	 * Return value: RTC_Status_E -> RTC data error code.
+	 */
+	RTC_Status_E rtc_read_reg(uint8_t register_address, uint8_t *recv_data);
+};
+
+
+
+#endif /* SECURITY_INC_RTC_HPP_ */
