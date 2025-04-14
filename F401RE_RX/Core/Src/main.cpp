@@ -33,9 +33,23 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define WRITE_CONFIG_REG 0x20
-#define READ_CONFIG_REG 0x00
-#define PWR_UP_BIT (1 << 1)
+//register commands
+constexpr uint8_t WRITE_CONFIG_REG = 0x20;
+constexpr uint8_t READ_CONFIG_REG = 0x00;
+constexpr uint8_t WRITE_FEATURE_REG = 0x3D;
+constexpr uint8_t READ_FEATURE_REG = 0x1D;
+constexpr uint8_t WRITE_AW_REG = 0x23;
+constexpr uint8_t READ_AW_REG = 0x03;
+constexpr uint8_t WRITE_RX_ADDR_P0_REG = 0x2A;
+constexpr uint8_t READ_RX_ADDR_P0_REG = 0x0A;
+constexpr uint8_t WRITE_TX_ADDR = 0x30;
+constexpr uint8_t READ_TX_ADDR = 0x10;
+constexpr uint8_t WRITE_SETUP_RETR_REG = 0x14;
+constexpr uint8_t READ_SETUP_RETR_REG = 0x04;
+
+//register bits.
+constexpr uint8_t PWR_UP_BIT = (1 << 1);
+constexpr uint8_t EN_DPL_BIT = (1 << 2);
 
 /* USER CODE END PD */
 
@@ -121,21 +135,118 @@ int main(void)
 
   //PB6 is the CS PIN. PC7 is CE pin, and PA9 is for the external interrupt.
   //Set the PWR_UP bit in the config register.
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
   uint8_t command = WRITE_CONFIG_REG;
   uint8_t config_reg_bits = PWR_UP_BIT;
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
   HAL_SPI_Transmit(&hspi1, &command, 1, 100);
   HAL_SPI_Transmit(&hspi1, &config_reg_bits, 1, 100);
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
 
   //Read back the PWR_UP bit in the config register.
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
   command = READ_CONFIG_REG;
   uint8_t read_config_bits = 0;
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+
   HAL_SPI_Transmit(&hspi1, &command, 1, 100);
   HAL_SPI_Receive(&hspi1, &read_config_bits, 1, 100);
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
   HAL_Delay(3);
+
+  //Here you should be in standby mode.
+  //enable DPL by setting the DPL bit in the feature register high.
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+  command = WRITE_FEATURE_REG;
+  uint8_t feature_reg_bits = EN_DPL_BIT;
+  HAL_SPI_Transmit(&hspi1, &command, 1, 100);
+  HAL_SPI_Transmit(&hspi1, &feature_reg_bits, 1, 100);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+
+  //Read back the EN_DPL bit in the feature register
+  uint8_t read_feature_reg_bits = 24;
+  command = READ_FEATURE_REG;
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+  HAL_SPI_Transmit(&hspi1, &command, 1, 100);
+  HAL_SPI_Receive(&hspi1, &read_feature_reg_bits, 1, 100);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+
+  //Set the AW register
+  command = WRITE_AW_REG;
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+  uint8_t three_bytes = 1;
+  uint8_t four_bytes = 2;
+  uint8_t five_bytes = 3;
+  HAL_SPI_Transmit(&hspi1, &command, 1, 100);
+  HAL_SPI_Transmit(&hspi1, &three_bytes, 1, 100);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+
+  //read back the AW register
+  uint8_t read_aw_reg_bits = 0;
+  command = READ_AW_REG;
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+  HAL_SPI_Transmit(&hspi1, &command, 1, 100);
+  HAL_SPI_Receive(&hspi1, &read_aw_reg_bits, 1, 100);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+
+  //Set the receiver address.
+  uint8_t rx_addr_byte = 0x78;
+  command = WRITE_RX_ADDR_P0_REG;
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+  HAL_SPI_Transmit(&hspi1, &command, 1, 100);
+  HAL_SPI_Transmit(&hspi1, &rx_addr_byte, 1, 100);
+  HAL_SPI_Transmit(&hspi1, &rx_addr_byte, 1, 100);
+  HAL_SPI_Transmit(&hspi1, &rx_addr_byte, 1, 100);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+
+  //Read back the receiver address
+  uint8_t data_byte = 0;
+  int rx_address = 0;
+  command = READ_RX_ADDR_P0_REG;
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+  HAL_SPI_Transmit(&hspi1, &command, 1, 100);
+  HAL_SPI_Receive(&hspi1, &data_byte, 1, 100);
+  rx_address |= data_byte;
+  HAL_SPI_Receive(&hspi1, &data_byte, 1, 100);
+  rx_address |= data_byte << 8;
+  HAL_SPI_Receive(&hspi1, &data_byte, 1, 100);
+  rx_address |= data_byte << 16;
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+
+  //set the transmitter address
+  command = WRITE_TX_ADDR;
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+  HAL_SPI_Transmit(&hspi1, &command, 1, 100);
+  HAL_SPI_Transmit(&hspi1, &rx_addr_byte, 1, 100);
+  HAL_SPI_Transmit(&hspi1, &rx_addr_byte, 1, 100);
+  HAL_SPI_Transmit(&hspi1, &rx_addr_byte, 1, 100);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+
+  //Read back the transmitter address
+   int tx_address = 0;
+   command = READ_RX_ADDR_P0_REG;
+   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+   HAL_SPI_Transmit(&hspi1, &command, 1, 100);
+   HAL_SPI_Receive(&hspi1, &data_byte, 1, 100);
+   tx_address |= data_byte;
+   HAL_SPI_Receive(&hspi1, &data_byte, 1, 100);
+   tx_address |= data_byte << 8;
+   HAL_SPI_Receive(&hspi1, &data_byte, 1, 100);
+   tx_address |= data_byte << 16;
+   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+
+   //set up the number of retransmits and the auto retransmit delay
+   uint8_t arc_bits = 0x03;
+   uint8_t ard_bits = 0x01 << 4;
+   uint8_t set_retr_reg_bits = arc_bits | ard_bits;
+   command = WRITE_SETUP_RETR_REG;
+   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+   HAL_SPI_Transmit(&hspi1, &command, 1, 100);
+   HAL_SPI_Transmit(&hspi1, &set_retr_reg_bits, 1, 100);
+   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+
+   //read back the status of the set_retr register.
+
+
+
 
   /* USER CODE END 2 */
 
@@ -155,8 +266,21 @@ int main(void)
 //			  "Week_Day: %d, Date_Day %d, Month %d, Year %d\r\n",
 //			  seconds, minutes, hours, weekday, date_day, month, year+millennium), 100);
 
-	  HAL_UART_Transmit(&huart2, (uint8_t *)message, sprintf(message, "The config bit status is %d\r\n",
+	  HAL_UART_Transmit(&huart2, (uint8_t *)message, sprintf(message, "The config reg status is %d\r\n",
 			  read_config_bits), 100);
+
+	  HAL_UART_Transmit(&huart2, (uint8_t *)message, sprintf(message, "The feature reg status is %d\r\n",
+			  read_feature_reg_bits), 100);
+
+	  HAL_UART_Transmit(&huart2, (uint8_t *)message, sprintf(message, "The AW reg status is %d\r\n",
+			  read_aw_reg_bits), 100);
+
+	  HAL_UART_Transmit(&huart2, (uint8_t *)message, sprintf(message, "The RX_ADDR reg status is %d\r\n",
+			  rx_address), 100);
+
+	  HAL_UART_Transmit(&huart2, (uint8_t *)message, sprintf(message, "The TX_ADDR reg status is %d\r\n",
+	 			  tx_address), 100);
+
 
 	  HAL_Delay(1000);
     /* USER CODE END WHILE */
