@@ -34,18 +34,35 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 //register commands
-constexpr uint8_t WRITE_CONFIG_REG = 0x20;
-constexpr uint8_t READ_CONFIG_REG = 0x00;
-constexpr uint8_t WRITE_FEATURE_REG = 0x3D;
-constexpr uint8_t READ_FEATURE_REG = 0x1D;
-constexpr uint8_t WRITE_AW_REG = 0x23;
-constexpr uint8_t READ_AW_REG = 0x03;
-constexpr uint8_t WRITE_RX_ADDR_P0_REG = 0x2A;
-constexpr uint8_t READ_RX_ADDR_P0_REG = 0x0A;
-constexpr uint8_t WRITE_TX_ADDR = 0x30;
-constexpr uint8_t READ_TX_ADDR = 0x10;
-constexpr uint8_t WRITE_SETUP_RETR_REG = 0x14;
-constexpr uint8_t READ_SETUP_RETR_REG = 0x04;
+constexpr uint8_t write = 0x20;
+constexpr uint8_t read = 0x0;
+
+constexpr uint8_t config_reg = 0x0;
+constexpr uint8_t feature_reg = 0x1D;
+constexpr uint8_t aw_reg = 0x03;
+constexpr uint8_t rx_addr_p0_reg = 0x0A;
+constexpr uint8_t tx_addr_reg = 0x10;
+constexpr uint8_t setup_retr_reg = 0x04;
+constexpr uint8_t rf_setup_reg = 0x06;
+constexpr uint8_t rf_ch_reg = 0x05;
+
+//set of spi commands
+constexpr uint8_t WRITE_CONFIG_REG = write | config_reg;
+constexpr uint8_t READ_CONFIG_REG = read | config_reg;
+constexpr uint8_t WRITE_FEATURE_REG = write | feature_reg;
+constexpr uint8_t READ_FEATURE_REG = read | feature_reg;
+constexpr uint8_t WRITE_AW_REG = write | aw_reg;
+constexpr uint8_t READ_AW_REG = read | aw_reg;
+constexpr uint8_t WRITE_RX_ADDR_P0_REG = write | rx_addr_p0_reg;
+constexpr uint8_t READ_RX_ADDR_P0_REG = read | rx_addr_p0_reg;
+constexpr uint8_t WRITE_TX_ADDR = write | tx_addr_reg;
+constexpr uint8_t READ_TX_ADDR = read | tx_addr_reg;
+constexpr uint8_t WRITE_SETUP_RETR_REG = write | setup_retr_reg;
+constexpr uint8_t READ_SETUP_RETR_REG = read | setup_retr_reg;
+constexpr uint8_t WRITE_RF_SETUP_REG = write | rf_setup_reg;
+constexpr uint8_t READ_RF_SETUP_REG = read | rf_setup_reg;
+constexpr uint8_t WRITE_RF_CH_REG = write | rf_ch_reg;
+constexpr uint8_t READ_RF_CH_REG = read | rf_ch_reg;
 
 //register bits.
 constexpr uint8_t PWR_UP_BIT = (1 << 1);
@@ -235,8 +252,8 @@ int main(void)
 
    //set up the number of retransmits and the auto retransmit delay
    uint8_t arc_bits = 0x03;
-   uint8_t ard_bits = 0x01 << 4;
-   uint8_t set_retr_reg_bits = arc_bits | ard_bits;
+   uint8_t ard_bits = 0x01;
+   uint8_t set_retr_reg_bits = (ard_bits << 4) | arc_bits;
    command = WRITE_SETUP_RETR_REG;
    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
    HAL_SPI_Transmit(&hspi1, &command, 1, 100);
@@ -244,6 +261,48 @@ int main(void)
    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
 
    //read back the status of the set_retr register.
+   uint8_t read_set_retr_reg_bits = 0;
+   command = READ_SETUP_RETR_REG;
+   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+   HAL_SPI_Transmit(&hspi1, &command, 1, 100);
+   HAL_SPI_Receive(&hspi1, &read_set_retr_reg_bits, 1, 100);
+   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+
+   //Setting up the air data rate and PA control stuff.
+   uint8_t rf_setup_reg_bits = 0x24;
+   command = WRITE_RF_SETUP_REG;
+   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+   HAL_SPI_Transmit(&hspi1, &command, 1, 100);
+   HAL_SPI_Transmit(&hspi1, &rf_setup_reg_bits, 1, 100);
+   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+
+   //read back the rf_setup bits.
+   uint8_t read_rf_setup_bits = 0;
+   command = READ_RF_SETUP_REG;
+   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+   HAL_SPI_Transmit(&hspi1, &command, 1, 100);
+   HAL_SPI_Receive(&hspi1, &read_rf_setup_bits, 1, 100);
+   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+
+//   //setting the rf_ch bits
+   uint8_t rf_channel_bits = 0x04;
+   command = WRITE_RF_CH_REG;
+   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+   HAL_SPI_Transmit(&hspi1, &command, 1, 100);
+   HAL_SPI_Transmit(&hspi1, &rf_channel_bits, 1, 100);
+   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+
+   //reading the rf channel bits
+   uint8_t read_rf_channel_bits = 0;
+   command = READ_RF_CH_REG;
+   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+   HAL_SPI_Transmit(&hspi1, &command, 1, 100);
+   HAL_SPI_Receive(&hspi1, &read_rf_channel_bits, 1, 100);
+   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+
+
+
+
 
 
 
@@ -280,6 +339,15 @@ int main(void)
 
 	  HAL_UART_Transmit(&huart2, (uint8_t *)message, sprintf(message, "The TX_ADDR reg status is %d\r\n",
 	 			  tx_address), 100);
+
+	  HAL_UART_Transmit(&huart2, (uint8_t *)message, sprintf(message, "The set_retr reg status is %d\r\n",
+			  read_set_retr_reg_bits), 100);
+
+	  HAL_UART_Transmit(&huart2, (uint8_t *)message, sprintf(message, "The rf_setup_reg value is %d\r\n",
+			  read_rf_setup_bits), 100);
+
+	  HAL_UART_Transmit(&huart2, (uint8_t *)message, sprintf(message, "The rf_ch reg value is %d\r\n",
+			  read_rf_channel_bits), 100);
 
 
 	  HAL_Delay(1000);
