@@ -1,6 +1,6 @@
-../Core/Src/main.cpp:70:5:int main()	1
-../Core/Src/main.cpp:141:6:void SystemClock_Config()	3
-../Core/Src/main.cpp:183:13:void MX_I2C2_Init()	2
-../Core/Src/main.cpp:217:13:void MX_USART2_UART_Init()	2
-../Core/Src/main.cpp:250:13:void MX_GPIO_Init()	1
-../Core/Src/main.cpp:271:6:void Error_Handler()	1
+../Core/Src/main.cpp:165:6:void write_register(SPI_HandleTypeDef*, uint8_t, uint8_t*, uint8_t)	1
+../Core/Src/main.cpp:173:6:void read_register(SPI_HandleTypeDef*, uint8_t, uint8_t*, uint8_t)	1
+../Core/Src/main.cpp:188:5:int main()	1
+../Core/Src/main.cpp:504:6:void SystemClock_Config()	3
+../Core/Src/main.cpp:543:6:void HAL_GPIO_EXTI_Callback(uint16_t)	3
+../Core/Src/main.cpp:577:6:void Error_Handler()	1
