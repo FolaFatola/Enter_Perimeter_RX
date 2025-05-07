@@ -137,6 +137,8 @@ constexpr uint8_t ERX_P3 = (1 << 3);
 constexpr uint8_t ERX_P4 = (1 << 4);
 constexpr uint8_t ERX_P5 = (1 << 5);
 
+volatile uint8_t data_received = 0;
+
 
 /* USER CODE END PD */
 
@@ -263,10 +265,8 @@ int main(void)
 	reset_value = 0x07;
 	write_register(&hspi1, rf_setup_reg, &reset_value, 1);
 
-	reset_value = 0x7E;
+	reset_value = 0x0E;
 	write_register(&hspi1, status_reg, &reset_value, 1);
-
-
 
 	//CONFIG settings
   	uint8_t config_reg_bits = 0;
@@ -280,11 +280,9 @@ int main(void)
 	config_reg_bits |= PRIM_RX;
 	write_register(&hspi1, config_reg, &config_reg_bits, 1);
 
-
-	HAL_Delay(10);
+	HAL_Delay(5);
 
 	read_register(&hspi1, config_reg, &config_reg_bits, 1);
-	printf("The config bits should show %d\n", config_reg_bits);
 
 	uint8_t en_rxaddr_bits = 0;
 	read_register(&hspi1, en_rxaddr_reg, &en_rxaddr_bits, 1);
@@ -437,7 +435,6 @@ int main(void)
 //	printf("Status reg %d\n", status_reg_bits);
 //	printf("The config reg is %d\n", config_reg_bits);
 
-	printf("The payload length 0 is %d\n", pl_length_0);
 //	printf("The payload length 1 is %d\n", pl_length_1);
 //	printf("The payload length 2 is %d\n", pl_length_2);
 //	printf("The payload length 3 is %d\n", pl_length_3);
@@ -457,7 +454,7 @@ int main(void)
 
 
 
-
+	  uint8_t status_test = 0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -487,9 +484,50 @@ int main(void)
 //		  printf("The rf_ch reg value is %d\n", read_rf_channel_bits);
 
 //		//Receive the data
-//	   printf("%d\n", receive_payload);
-//	  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
-		HAL_Delay(10);
+//	   		printf("%d\n", receive_payload);
+//	    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
+
+
+
+	  if (data_received) {
+		  uint8_t comm = R_RX_PAYLOAD;
+
+		  uint8_t come_now[3];
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
+		  HAL_SPI_Transmit(&hspi1, &comm, 1, 10);
+
+		  HAL_SPI_Receive(&hspi1, come_now, 3, 10);
+		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
+		  printf("The received payload is %d %d %d\n", come_now[0], come_now[1], come_now[2]);
+		  data_received = 0;
+	  }
+
+
+
+	  read_register(&hspi1, status_reg, &status_test ,1);
+
+	  if (status_test & 0x40) {
+		  status_test |= 0x40;
+		  printf("Clearing RX_DR\n");
+	  }
+
+	  if (status_test & 0x04) {
+		  status_test |= 0x04;
+		  printf("Clearing Max RT\n");
+	  }
+
+	  write_register(&hspi1, status_reg, &status_test ,1);
+
+	  read_register(&hspi1, status_reg, &status_test, 1);
+	  printf("The value of status_test is %d and the receive status is %d\n", status_test, data_received);
+
+	  write_register(&hspi1, status_reg, &status_test ,1);
+
+
+
+
+
+	  HAL_Delay(10);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -542,30 +580,9 @@ void SystemClock_Config(void)
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if (GPIO_Pin == GPIO_PIN_9) {
-		printf("Receive\n");
-		uint8_t comm = R_RX_PAYLOAD;
-
-		uint8_t come_now[3];
-		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
-		HAL_SPI_Transmit(&hspi1, &comm, 1, 100);
-
-		HAL_SPI_Receive(&hspi1, come_now, 3, 100);
-		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
-		printf("The received payload is %d %d %d\n", come_now[0], come_now[1], come_now[2]);
-
-		uint8_t status_test = 0;
-		read_register(&hspi1, status_reg, &status_test ,1);
-
-		if (status_test & 0x40) {
-			status_test |= 0x40;
-		}
-
-		write_register(&hspi1, status_reg, &status_test ,1);
+		data_received = 1;
+		printf("Inside interrupt\n");
 	}
-
-	printf("INside interrupt\n");
-
-
 }
 
 /* USER CODE END 4 */
