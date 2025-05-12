@@ -21,6 +21,7 @@ typedef enum ADDR_WIDTH {
 } ADDR_WIDTH;
 
 extern volatile uint8_t rx_data_received;
+extern volatile uint8_t tx_interrupt;
 
 class NRF2401;
 
@@ -33,6 +34,7 @@ public:
 			uint16_t irq_pin);
 
 	void nrf_init(uint16_t rf_ch_frequency, DATA_RATE data_rate, ADDR_WIDTH width);
+	void nrf_reset();
 	void setup_tx_mode(uint8_t *address, uint8_t address_length_bytes);
 	void setup_rx_mode(uint8_t *address, uint8_t address_length_bytes, uint8_t enable_auto_acknowledge_pipe_x,
 			uint8_t enable_rx_addr_pipe_x, uint8_t payload_length);

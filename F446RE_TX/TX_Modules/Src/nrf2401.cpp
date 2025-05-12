@@ -2,6 +2,7 @@
 
 
 volatile uint8_t rx_data_received = 0;
+volatile uint8_t tx_interrupt = 0;
 
 NRF2401 rf_module(&hspi1, GPIOB, GPIOC, GPIOA, GPIO_PIN_6, GPIO_PIN_7, GPIO_PIN_9);
 
@@ -32,6 +33,68 @@ void NRF2401::send_spi_command(uint8_t nrf2401_command) {
 	HAL_GPIO_WritePin(cs_pin_port_, cs_pin_, GPIO_PIN_RESET);
 	HAL_SPI_Transmit(spi_handle_, &nrf2401_command, 1, 100);
 	HAL_GPIO_WritePin(cs_pin_port_, cs_pin_, GPIO_PIN_SET);
+}
+
+void NRF2401::nrf_reset() {
+    HAL_GPIO_WritePin(ce_pin_port_, ce_pin_, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(cs_pin_port_, cs_pin_, GPIO_PIN_SET);
+
+	//reset all registers
+	uint8_t reset_value = 0x08;
+	write_register(config_reg, &reset_value, 1);
+
+	reset_value = 0x3F;
+	write_register(en_aa_reg, &reset_value, 1);
+
+	reset_value = 0x03;
+	write_register(en_rxaddr_reg, &reset_value, 1);
+
+	reset_value = 0x03;
+	write_register(aw_reg, &reset_value, 1);
+
+	reset_value = 0x03;
+	write_register(setup_retr_reg, &reset_value, 1);
+
+	reset_value = 0x02;
+	write_register(rf_ch_reg, &reset_value, 1);
+
+	reset_value = 0x07;
+	write_register(rf_setup_reg, &reset_value, 1);
+
+	reset_value = 0x7E;
+	write_register(status_reg, &reset_value, 1);
+
+	uint8_t address_reset_val_p0[5] = {0xE7, 0xE7, 0xE7, 0xE7, 0xE7};
+	write_register(rx_addr_p0_reg, address_reset_val_p0, 5);
+	write_register(tx_addr_reg, address_reset_val_p0, 5);
+	uint8_t address_reset_val_p1[5] = {0xC2, 0xC2, 0xC2, 0xC2, 0xC2};
+	write_register(rx_addr_p1_reg, address_reset_val_p1, 5);
+	reset_value = 0xC3;
+	write_register(rx_addr_p2_reg, &reset_value, 1);
+	reset_value = 0xC4;
+	write_register(rx_addr_p3_reg, &reset_value, 1);
+	reset_value = 0xC5;
+	write_register(rx_addr_p4_reg, &reset_value, 1);
+	reset_value = 0xC6;
+	write_register(rx_addr_p5_reg, &reset_value, 1);
+
+	reset_value = 0x00;
+	write_register(rx_pw_p0_reg, &reset_value, 1);
+	write_register(rx_pw_p1_reg, &reset_value, 1);
+	write_register(rx_pw_p2_reg, &reset_value, 1);
+	write_register(rx_pw_p3_reg, &reset_value, 1);
+	write_register(rx_pw_p4_reg, &reset_value, 1);
+	write_register(rx_pw_p5_reg, &reset_value, 1);
+
+	reset_value = 0x11;
+	write_register(fifo_status_reg, &reset_value, 1);
+
+	reset_value = 0x00;
+	write_register(dynpd_reg, &reset_value, 1);
+	write_register(feature_reg, &reset_value, 1);
+
+	rf_module.send_spi_command(flush_rx_fifo);
+	rf_module.send_spi_command(flush_tx_fifo);
 }
 
 void NRF2401::nrf_power_on() {
@@ -163,10 +226,12 @@ void NRF2401::set_auto_retransmit(uint8_t auto_retransmit_count, uint16_t auto_r
 }
 
 void NRF2401::nrf_init(uint16_t rf_ch_frequency, DATA_RATE data_rate, ADDR_WIDTH width) {
+	HAL_Delay(10);
+	nrf_reset();
 	nrf_power_on();
 	enable_crc(false);
 	set_rf_channel_frequency(rf_ch_frequency);
-	set_air_data_rate(data_rate);
+	set_air_data_rate(KBPS_250);
 	set_address_width(width);
 	set_auto_retransmit(10, 500);
 }
@@ -176,6 +241,7 @@ void NRF2401::setup_tx_mode(uint8_t *address, uint8_t address_length_bytes) {
 //	set_tx_address(address, address_length_bytes);
 	nrf_set_prim_rx();
 	HAL_GPIO_WritePin(ce_pin_port_, ce_pin_, GPIO_PIN_SET);
+//	send_spi_command(flush_tx_fifo);
 }
 
 void NRF2401::setup_receiver_channel(uint8_t enable_auto_acknowledge_pipe_x, uint8_t enable_rx_addr_pipe_x) {
@@ -217,11 +283,10 @@ void NRF2401::set_rx_address(uint8_t *address, uint8_t address_length_bytes, uin
 void NRF2401::setup_rx_mode(uint8_t *address, uint8_t address_length_bytes, uint8_t enable_auto_acknowledge_pipe_x,
 		uint8_t enable_rx_addr_pipe_x, uint8_t payload_length) {
 	setup_receiver_channel(enable_auto_acknowledge_pipe_x, enable_rx_addr_pipe_x);
-	set_rx_address(address, address_length_bytes, enable_rx_addr_pipe_x);
+//	set_rx_address(address, address_length_bytes, enable_rx_addr_pipe_x);
 	set_data_pipe_payload_length(payload_length, enable_rx_addr_pipe_x);
 	nrf_set_prim_rx();
 	HAL_GPIO_WritePin(ce_pin_port_, ce_pin_, GPIO_PIN_SET);
-	send_spi_command(flush_rx_fifo);
 }
 
 void NRF2401::set_data_pipe_payload_length(uint8_t payload_length, uint8_t rx_data_pipe) {
@@ -232,7 +297,7 @@ void NRF2401::set_data_pipe_payload_length(uint8_t payload_length, uint8_t rx_da
 	payload_length_ = payload_length;
 	uint8_t rx_pw_px_reg = rx_pw_p0_reg;
 	rx_pw_px_reg += rx_data_pipe;
-	write_register(rx_pw_px_reg, &payload_length_, 1);
+	write_register(rx_pw_px_reg, &payload_length, 1);
 }
 
 void NRF2401::set_status(uint8_t bits) {
@@ -250,7 +315,7 @@ void NRF2401::check_fifo_status(uint8_t &fifo_reg) {
 void NRF2401::receive_data_from_rx_fifo(uint8_t *rx_data) {
 	HAL_GPIO_WritePin(cs_pin_port_, cs_pin_, GPIO_PIN_RESET);
 	HAL_SPI_Transmit(spi_handle_, &read_rx_fifo, 1, 100);
-	HAL_SPI_Transmit(spi_handle_, rx_data, payload_length_, 100);
+	HAL_SPI_Receive(spi_handle_, rx_data, payload_length_, 100);
 	HAL_GPIO_WritePin(cs_pin_port_, cs_pin_, GPIO_PIN_SET);
 }
 
@@ -269,41 +334,10 @@ bool NRF2401::get_operating_mode() {
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	if(GPIO_Pin == GPIO_PIN_9) {
-		uint8_t rx_dr_irq = (1 << 6);
-		uint8_t tx_ds_irq = (1 << 5);
-		uint8_t max_rt_irq = (1 << 4);
-
-		uint8_t status_register_byte = 0;
 		if (rf_module.get_operating_mode() == true) { //tx mode
-
-			rf_module.read_register(status_reg, &status_register_byte, 1);
-			if (status_register_byte & tx_ds_irq) {
-				status_register_byte |= tx_ds_irq; //TX_DS clear
-				printf("TX_DS clear\n");
-			} else if (status_register_byte & max_rt_irq) {
-				 status_register_byte |= max_rt_irq;
-				 printf("Max RT\n");
-			}
-			rf_module.write_register(status_reg, &status_register_byte, 1);
+			tx_interrupt = 0;
 		} else {						//false
-			rf_module.read_register(status_reg, &status_register_byte, 1);
-			uint8_t receive_data[3];
-			if (status_register_byte & rx_dr_irq) { 	//data is ready.
-				rf_module.receive_data_from_rx_fifo(receive_data);
-				printf("The first I need to do is %d %d %d\n", receive_data[0], receive_data[1], receive_data[2]);
-				status_register_byte |= rx_dr_irq;
-			}
-
-			if (status_register_byte & tx_ds_irq) {
-				status_register_byte |= tx_ds_irq; //TX_DS clear
-				printf("TX_DS clear\n");
-			} else if (status_register_byte & max_rt_irq) {
-				 status_register_byte |= max_rt_irq;
-				 printf("Max RT\n");
-			}
-
-			rf_module.write_register(status_reg, &status_register_byte, 1);
-			printf("Register is %d\n", status_register_byte);
+			rx_data_received = 1;
 		}
 
 	}

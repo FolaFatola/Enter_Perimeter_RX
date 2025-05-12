@@ -37,9 +37,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-//register commands
-constexpr uint8_t write = 0x20;
-constexpr uint8_t read = 0x00;
 
 
 /* USER CODE END PD */
@@ -63,24 +60,6 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void write_register(SPI_HandleTypeDef *spi_handle, uint8_t *write_data, uint8_t write_bytes);
-void read_register(SPI_HandleTypeDef *spi_handle, uint8_t *read_data, uint8_t read_bytes);
-
-void write_register(SPI_HandleTypeDef *spi_handle, uint8_t reg, uint8_t *write_data, uint8_t write_bytes) {
-	uint8_t write_reg = write | reg;
-  	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
-	HAL_SPI_Transmit(spi_handle, &write_reg, 1, 100);
-	HAL_SPI_Transmit(spi_handle, write_data, write_bytes, 100);
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
-}
-
-void read_register(SPI_HandleTypeDef *spi_handle, uint8_t reg, uint8_t *read_data, uint8_t read_bytes) {
-	uint8_t read_reg = read | reg;
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
-	HAL_SPI_Transmit(spi_handle, &read_reg, 1, 100);
-	HAL_SPI_Receive(spi_handle, read_data, read_bytes, 100);
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
-}
 
 /* USER CODE END 0 */
 
@@ -121,145 +100,38 @@ int main(void)
 
 	//PB6 is the CS PIN. PC7 is CE pin, and PA9 is for the external interrupt.
 
-    HAL_Delay(10);
-    uint8_t command = 0;
 
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
-
-	//reset all registers
-	uint8_t reset_value = 0x08;
-	write_register(&hspi1, config_reg, &reset_value, 1);
-
-	reset_value = 0x3F;
-	write_register(&hspi1, en_aa_reg, &reset_value, 1);
-
-	reset_value = 0x03;
-	write_register(&hspi1, en_rxaddr_reg, &reset_value, 1);
-
-	reset_value = 0x03;
-	write_register(&hspi1, aw_reg, &reset_value, 1);
-
-	reset_value = 0x03;
-	write_register(&hspi1, setup_retr_reg, &reset_value, 1);
-
-	reset_value = 0x02;
-	write_register(&hspi1, rf_ch_reg, &reset_value, 1);
-
-	reset_value = 0x07;
-	write_register(&hspi1, rf_setup_reg, &reset_value, 1);
-
-	reset_value = 0x7E;
-	write_register(&hspi1, status_reg, &reset_value, 1);
-
-	uint8_t address_reset_val_p0[5] = {0xE7, 0xE7, 0xE7, 0xE7, 0xE7};
-	write_register(&hspi1, rx_addr_p0_reg, address_reset_val_p0, 5);
-	write_register(&hspi1, tx_addr_reg, address_reset_val_p0, 5);
-	uint8_t address_reset_val_p1[5] = {0xC2, 0xC2, 0xC2, 0xC2, 0xC2};
-	write_register(&hspi1, rx_addr_p1_reg, address_reset_val_p1, 5);
-	reset_value = 0xC3;
-	write_register(&hspi1, rx_addr_p2_reg, &reset_value, 1);
-	reset_value = 0xC4;
-	write_register(&hspi1, rx_addr_p3_reg, &reset_value, 1);
-	reset_value = 0xC5;
-	write_register(&hspi1, rx_addr_p4_reg, &reset_value, 1);
-	reset_value = 0xC6;
-	write_register(&hspi1, rx_addr_p5_reg, &reset_value, 1);
-
-	reset_value = 0x00;
-	write_register(&hspi1, rx_pw_p0_reg, &reset_value, 1);
-	write_register(&hspi1, rx_pw_p1_reg, &reset_value, 1);
-	write_register(&hspi1, rx_pw_p2_reg, &reset_value, 1);
-	write_register(&hspi1, rx_pw_p3_reg, &reset_value, 1);
-	write_register(&hspi1, rx_pw_p4_reg, &reset_value, 1);
-	write_register(&hspi1, rx_pw_p5_reg, &reset_value, 1);
-
-	reset_value = 0x11;
-	write_register(&hspi1, fifo_status_reg, &reset_value, 1);
-
-	reset_value = 0x00;
-	write_register(&hspi1, dynpd_reg, &reset_value, 1);
-	write_register(&hspi1, feature_reg, &reset_value, 1);
+  uint8_t tx_addr[5] = {0x34, 0x35, 0xF0, 0xD3, 0xE4};
+  rf_module.nrf_init(2480, KBPS_250, FIVE_BYTES);
+  rf_module.setup_tx_mode(tx_addr, 5);
 
 
+  uint8_t tx_data[3] = {1, 2, 3};
+  uint8_t tx_ds_irq = (1 << 5);
+  uint8_t max_rt_irq = (1 << 4);
 
-
-
-
-
-	uint8_t reg_value = 0;
-
-
-	uint8_t tx_addr[5] = {0x34, 0x35, 0xF0, 0xD3, 0xE4};
-
-
-	rf_module.nrf_init(2480, KBPS_250, FIVE_BYTES);
-	rf_module.setup_tx_mode(tx_addr, 5);
-
-	rf_module.send_spi_command(flush_rx_fifo);
-	rf_module.send_spi_command(flush_tx_fifo);
-
-
-	read_register(&hspi1, status_reg, &reg_value, 1);
-	printf("The status_reg is %d\n", reg_value);
-
-	read_register(&hspi1, config_reg, &reg_value, 1);
-	printf("The config register is %d\n", reg_value);
-
-	read_register(&hspi1, aw_reg, &reg_value, 1);
-	printf("The aw_reg is %d\n", reg_value);
-
-	read_register(&hspi1, setup_retr_reg, &reg_value, 1);
-	printf("The setup_retr_reg is %d\n", reg_value);
-
-	read_register(&hspi1, rf_ch_reg, &reg_value, 1);
-	printf("The rf_ch_reg is %d\n", reg_value);
-
-	read_register(&hspi1, rf_setup_reg, &reg_value, 1);
-	printf("The rf_setup_reg is %d\n", reg_value);
-
-	rf_module.check_fifo_status(reg_value);
-	printf("The value of the fifo_status is %d\n", reg_value);
-
-	uint8_t rx_address[5];
-	read_register(&hspi1, rx_addr_p0_reg, rx_address, 5);
-	printf("Rx_address\n");
-	for (int i = 0; i < 5; i++) {
-		printf("The byte is %d\n", rx_address[i]);
-	}
-
-
-	uint8_t tx_address[5];
-	read_register(&hspi1, tx_addr_reg, tx_address, 5);
-	printf("Tx_address\n");
-	for (int i = 0; i < 5; i++) {
-		printf("The byte is %d\n", tx_address[i]);
-	}
-
-
-
-
-
-
-
-	uint8_t tx_data[3] = {1, 2, 3};
-	uint8_t fifo_stat = 0;
-
-
-
+  uint8_t status_register_byte = 0;
 
   /* USER CODE END 2 */
-
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1) {
 	  for (int i = 0; i < 3; ++i) {
-		  tx_data[i] += 1;
-		  printf("The value of tx_data[i] is %d\n", tx_data[i]);
+		  tx_data[i]++;
 	  }
 	  rf_module.send_data_tx_to_fifo(tx_data, 3);
 
+	  if (tx_interrupt) {
+		  rf_module.read_register(status_reg, &status_register_byte, 1);
+		  if (status_register_byte & tx_ds_irq) {
+			  status_register_byte |= tx_ds_irq; //TX_DS clear
+		  } else {
+			  status_register_byte |= max_rt_irq;
+		  }
+		 rf_module.write_register(status_reg, &status_register_byte, 1);
+		 tx_interrupt = 0;
+	  }
 
 	  HAL_Delay(1000);
     /* USER CODE END WHILE */
