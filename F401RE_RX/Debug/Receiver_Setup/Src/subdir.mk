@@ -5,14 +5,17 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../Receiver_Setup/Src/nrf2401.cpp \
 ../Receiver_Setup/Src/rtc.cpp \
 ../Receiver_Setup/Src/timeunit.cpp 
 
 OBJS += \
+./Receiver_Setup/Src/nrf2401.o \
 ./Receiver_Setup/Src/rtc.o \
 ./Receiver_Setup/Src/timeunit.o 
 
 CPP_DEPS += \
+./Receiver_Setup/Src/nrf2401.d \
 ./Receiver_Setup/Src/rtc.d \
 ./Receiver_Setup/Src/timeunit.d 
 
@@ -24,7 +27,7 @@ Receiver_Setup/Src/%.o Receiver_Setup/Src/%.su Receiver_Setup/Src/%.cyclo: ../Re
 clean: clean-Receiver_Setup-2f-Src
 
 clean-Receiver_Setup-2f-Src:
-	-$(RM) ./Receiver_Setup/Src/rtc.cyclo ./Receiver_Setup/Src/rtc.d ./Receiver_Setup/Src/rtc.o ./Receiver_Setup/Src/rtc.su ./Receiver_Setup/Src/timeunit.cyclo ./Receiver_Setup/Src/timeunit.d ./Receiver_Setup/Src/timeunit.o ./Receiver_Setup/Src/timeunit.su
+	-$(RM) ./Receiver_Setup/Src/nrf2401.cyclo ./Receiver_Setup/Src/nrf2401.d ./Receiver_Setup/Src/nrf2401.o ./Receiver_Setup/Src/nrf2401.su ./Receiver_Setup/Src/rtc.cyclo ./Receiver_Setup/Src/rtc.d ./Receiver_Setup/Src/rtc.o ./Receiver_Setup/Src/rtc.su ./Receiver_Setup/Src/timeunit.cyclo ./Receiver_Setup/Src/timeunit.d ./Receiver_Setup/Src/timeunit.o ./Receiver_Setup/Src/timeunit.su
 
 .PHONY: clean-Receiver_Setup-2f-Src
 
