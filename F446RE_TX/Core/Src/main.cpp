@@ -181,8 +181,7 @@ int main(void)
 	write_register(&hspi1, dynpd_reg, &reset_value, 1);
 	write_register(&hspi1, feature_reg, &reset_value, 1);
 
-	rf_module.send_spi_command(flush_rx_fifo);
-	rf_module.send_spi_command(flush_tx_fifo);
+
 
 
 
@@ -196,6 +195,9 @@ int main(void)
 
 	rf_module.nrf_init(2480, KBPS_250, FIVE_BYTES);
 	rf_module.setup_tx_mode(tx_addr, 5);
+
+	rf_module.send_spi_command(flush_rx_fifo);
+	rf_module.send_spi_command(flush_tx_fifo);
 
 
 	read_register(&hspi1, status_reg, &reg_value, 1);
@@ -246,7 +248,6 @@ int main(void)
 
 
 
-
   /* USER CODE END 2 */
 
 
@@ -255,8 +256,10 @@ int main(void)
   while (1) {
 	  for (int i = 0; i < 3; ++i) {
 		  tx_data[i] += 1;
+		  printf("The value of tx_data[i] is %d\n", tx_data[i]);
 	  }
 	  rf_module.send_data_tx_to_fifo(tx_data, 3);
+
 
 	  HAL_Delay(1000);
     /* USER CODE END WHILE */

@@ -1,5 +1,5 @@
 ../Core/Src/main.cpp:69:6:void write_register(SPI_HandleTypeDef*, uint8_t, uint8_t*, uint8_t)	32	static
 ../Core/Src/main.cpp:77:6:void read_register(SPI_HandleTypeDef*, uint8_t, uint8_t*, uint8_t)	32	static
 ../Core/Src/main.cpp:91:5:int main()	64	static
-../Core/Src/main.cpp:273:6:void SystemClock_Config()	88	static
-../Core/Src/main.cpp:319:6:void Error_Handler()	4	static,ignoring_inline_asm
+../Core/Src/main.cpp:276:6:void SystemClock_Config()	88	static
+../Core/Src/main.cpp:322:6:void Error_Handler()	4	static,ignoring_inline_asm

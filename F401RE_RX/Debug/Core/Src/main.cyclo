@@ -1,5 +1,5 @@
 ../Core/Src/main.cpp:72:6:void write_register(SPI_HandleTypeDef*, uint8_t, uint8_t*, uint8_t)	1
 ../Core/Src/main.cpp:80:6:void read_register(SPI_HandleTypeDef*, uint8_t, uint8_t*, uint8_t)	1
 ../Core/Src/main.cpp:95:5:int main()	1
-../Core/Src/main.cpp:311:6:void SystemClock_Config()	3
-../Core/Src/main.cpp:356:6:void Error_Handler()	1
+../Core/Src/main.cpp:308:6:void SystemClock_Config()	3
+../Core/Src/main.cpp:353:6:void Error_Handler()	1

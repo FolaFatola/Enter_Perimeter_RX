@@ -217,7 +217,7 @@ void NRF2401::set_rx_address(uint8_t *address, uint8_t address_length_bytes, uin
 
 void NRF2401::setup_rx_mode(uint8_t *address, uint8_t address_length_bytes, uint8_t enable_auto_acknowledge_pipe_x,
 		uint8_t enable_rx_addr_pipe_x, uint8_t payload_length) {
-//	setup_receiver_channel(enable_auto_acknowledge_pipe_x, enable_rx_addr_pipe_x);
+	setup_receiver_channel(enable_auto_acknowledge_pipe_x, enable_rx_addr_pipe_x);
 //	set_rx_address(address, address_length_bytes, enable_rx_addr_pipe_x);
 	set_data_pipe_payload_length(payload_length, enable_rx_addr_pipe_x);
 	nrf_set_prim_rx();
@@ -250,10 +250,8 @@ void NRF2401::check_fifo_status(uint8_t &fifo_reg) {
 void NRF2401::receive_data_from_rx_fifo(uint8_t *rx_data) {
 	HAL_GPIO_WritePin(cs_pin_port_, cs_pin_, GPIO_PIN_RESET);
 	HAL_SPI_Transmit(spi_handle_, &read_rx_fifo, 1, 100);
-	HAL_SPI_Transmit(spi_handle_, rx_data, payload_length_, 100);
+	HAL_SPI_Receive(spi_handle_, rx_data, payload_length_, 100);
 	HAL_GPIO_WritePin(cs_pin_port_, cs_pin_, GPIO_PIN_SET);
-
-	printf("The payload length is %d\n", payload_length_);
 }
 
 void NRF2401::send_data_tx_to_fifo(uint8_t *tx_data, uint8_t payload_length) {
@@ -295,6 +293,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			uint8_t rx_data[3] = {1, 1, 1};
 			if (status_register_byte & rx_dr_irq) { 	//data is ready.
 				rf_module.receive_data_from_rx_fifo(rx_data);
+
 				printf("The first I need to do is %d %d %d\n", rx_data[0], rx_data[1], rx_data[2]);
 				status_register_byte |= rx_dr_irq;
 			}

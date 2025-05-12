@@ -291,9 +291,6 @@ int main(void)
 //	    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
 
 
-	  	read_register(&hspi1, config_reg, &reg_value, 1);
-	  	printf("The config register is %d\n", reg_value);
-
 
 
 	  HAL_Delay(1000);
