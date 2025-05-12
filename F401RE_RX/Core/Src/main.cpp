@@ -28,6 +28,7 @@
 #include <cstdio>
 #include "rtc.hpp"
 #include <stdio.h>
+#include "nrf2401.hpp"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -40,102 +41,6 @@
 //register commands
 constexpr uint8_t write = 0x20;
 constexpr uint8_t read = 0x0;
-
-constexpr uint8_t config_reg = 0x0;
-constexpr uint8_t feature_reg = 0x1D;
-constexpr uint8_t aw_reg = 0x03;
-
-constexpr uint8_t rx_addr_p0_reg = 0x0A;
-constexpr uint8_t rx_addr_p1_reg = 0x0B;
-constexpr uint8_t rx_addr_p2_reg = 0x0C;
-constexpr uint8_t rx_addr_p3_reg = 0x0D;
-constexpr uint8_t rx_addr_p4_reg = 0x0E;
-constexpr uint8_t rx_addr_p5_reg = 0x0F;
-
-constexpr uint8_t setup_retr_reg = 0x04;
-constexpr uint8_t rf_setup_reg = 0x06;
-constexpr uint8_t rf_ch_reg = 0x05;
-constexpr uint8_t en_aa_reg = 0x01;
-constexpr uint8_t dynpd_reg = 0x1C;
-constexpr uint8_t en_rxaddr_reg = 0x02;
-constexpr uint8_t fifo_status_reg = 0x17;
-constexpr uint8_t status_reg = 0x07;
-
-//payload lengths
-constexpr uint8_t rx_pw_p0_reg = 0x11;
-constexpr uint8_t rx_pw_p1_reg = 0x12;
-constexpr uint8_t rx_pw_p2_reg = 0x13;
-constexpr uint8_t rx_pw_p3_reg = 0x14;
-constexpr uint8_t rx_pw_p4_reg = 0x15;
-constexpr uint8_t rx_pw_p5_reg = 0x16;
-
-
-//set of spi commands
-constexpr uint8_t WRITE_CONFIG_REG = write | config_reg;
-constexpr uint8_t READ_CONFIG_REG = read | config_reg;
-constexpr uint8_t WRITE_FEATURE_REG = write | feature_reg;
-constexpr uint8_t READ_FEATURE_REG = read | feature_reg;
-constexpr uint8_t WRITE_AW_REG = write | aw_reg;
-constexpr uint8_t READ_AW_REG = read | aw_reg;
-constexpr uint8_t WRITE_RX_ADDR_P0_REG = write | rx_addr_p0_reg;
-constexpr uint8_t READ_RX_ADDR_P0_REG = read | rx_addr_p0_reg;
-constexpr uint8_t WRITE_SETUP_RETR_REG = write | setup_retr_reg;
-constexpr uint8_t READ_SETUP_RETR_REG = read | setup_retr_reg;
-constexpr uint8_t WRITE_RF_SETUP_REG = write | rf_setup_reg;
-constexpr uint8_t READ_RF_SETUP_REG = read | rf_setup_reg;
-constexpr uint8_t WRITE_RF_CH_REG = write | rf_ch_reg;
-constexpr uint8_t READ_RF_CH_REG = read | rf_ch_reg;
-constexpr uint8_t WRITE_EN_AA_REG = write | en_aa_reg;
-constexpr uint8_t READ_EN_AA_REG = read | en_aa_reg;
-constexpr uint8_t WRITE_DYNPD_REG =  write | dynpd_reg;
-constexpr uint8_t READ_DYNPD_REG = read | dynpd_reg;
-constexpr uint8_t WRITE_EN_RX_ADDR_REG = write | en_rxaddr_reg;
-constexpr uint8_t READ_EN_RX_ADDR_REG = read | en_rxaddr_reg;
-constexpr uint8_t READ_FIFO_STATUS = read | fifo_status_reg;
-constexpr uint8_t READ_STATUS_REG = read | status_reg;
-constexpr uint8_t WRITE_STATUS_REG = write | status_reg;
-
-
-//pipes
-
-constexpr uint8_t FLUSH_RX = 0xE2;
-
-//Read received payload
-constexpr uint8_t R_RX_PAYLOAD = 0x61;
-
-//config register.
-constexpr uint8_t EN_CRC = (1 << 3);
-constexpr uint8_t CRCO = (1 << 2);
-constexpr uint8_t PWR_UP_BIT = (1 << 1);
-constexpr uint8_t PRIM_RX = (1 << 0);
-
-
-//feature reg
-constexpr uint8_t EN_ACK_PAY = (1 << 1);
-
-
-
-//ENAA registers (enable auto acknowledgement)
-constexpr uint8_t ENAA_P0 = (1 << 0);
-constexpr uint8_t ENAA_P1 = (1 << 1);
-constexpr uint8_t ENAA_P2 = (1 << 2);
-constexpr uint8_t ENAA_P3 = (1 << 3);
-constexpr uint8_t ENAA_P4 = (1 << 4);
-constexpr uint8_t ENAA_P5 = (1 << 5);
-
-constexpr uint8_t DPL_P0 = (1 << 0);
-constexpr uint8_t DPL_P1 = (1 << 1);
-constexpr uint8_t DPL_P2 = (1 << 2);
-constexpr uint8_t DPL_P3 = (1 << 3);
-constexpr uint8_t DPL_P4 = (1 << 4);
-constexpr uint8_t DPL_P5 = (1 << 5);
-
-constexpr uint8_t ERX_P0 = (1 << 0);
-constexpr uint8_t ERX_P1 = (1 << 1);
-constexpr uint8_t ERX_P2 = (1 << 2);
-constexpr uint8_t ERX_P3 = (1 << 3);
-constexpr uint8_t ERX_P4 = (1 << 4);
-constexpr uint8_t ERX_P5 = (1 << 5);
 
 volatile uint8_t data_received = 0;
 
@@ -238,12 +143,13 @@ int main(void)
 	    //PB6 is the CS PIN. PC7 is CE pin, and PA9 is for the external interrupt.
 
 
-	HAL_Delay(10);
+    HAL_Delay(10);
+    uint8_t command = 0;
 
+    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
 
-	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
 	//reset all registers
-	uint8_t command = WRITE_CONFIG_REG;
 	uint8_t reset_value = 0x08;
 	write_register(&hspi1, config_reg, &reset_value, 1);
 
@@ -265,196 +171,93 @@ int main(void)
 	reset_value = 0x07;
 	write_register(&hspi1, rf_setup_reg, &reset_value, 1);
 
-	reset_value = 0x0E;
+	reset_value = 0x7E;
 	write_register(&hspi1, status_reg, &reset_value, 1);
 
-	//CONFIG settings
-  	uint8_t config_reg_bits = 0;
-  	read_register(&hspi1, config_reg, &config_reg_bits, 1);
+	uint8_t address_reset_val_p0[5] = {0xE7, 0xE7, 0xE7, 0xE7, 0xE7};
+	write_register(&hspi1, rx_addr_p0_reg, address_reset_val_p0, 5);
+	write_register(&hspi1, tx_addr_reg, address_reset_val_p0, 5);
+	uint8_t address_reset_val_p1[5] = {0xC2, 0xC2, 0xC2, 0xC2, 0xC2};
+	write_register(&hspi1, rx_addr_p1_reg, address_reset_val_p1, 5);
+	reset_value = 0xC3;
+	write_register(&hspi1, rx_addr_p2_reg, &reset_value, 1);
+	reset_value = 0xC4;
+	write_register(&hspi1, rx_addr_p3_reg, &reset_value, 1);
+	reset_value = 0xC5;
+	write_register(&hspi1, rx_addr_p4_reg, &reset_value, 1);
+	reset_value = 0xC6;
+	write_register(&hspi1, rx_addr_p5_reg, &reset_value, 1);
 
-	//Set the PWR_UP bit in the config register.
-	config_reg_bits |= PWR_UP_BIT;	//ENTER standby mode.
-	write_register(&hspi1, config_reg, &config_reg_bits, 1);
-	HAL_Delay(5);
+	reset_value = 0x00;
+	write_register(&hspi1, rx_pw_p0_reg, &reset_value, 1);
+	write_register(&hspi1, rx_pw_p1_reg, &reset_value, 1);
+	write_register(&hspi1, rx_pw_p2_reg, &reset_value, 1);
+	write_register(&hspi1, rx_pw_p3_reg, &reset_value, 1);
+	write_register(&hspi1, rx_pw_p4_reg, &reset_value, 1);
+	write_register(&hspi1, rx_pw_p5_reg, &reset_value, 1);
 
-	config_reg_bits |= PRIM_RX;
-	write_register(&hspi1, config_reg, &config_reg_bits, 1);
+	reset_value = 0x11;
+	write_register(&hspi1, fifo_status_reg, &reset_value, 1);
 
-	HAL_Delay(5);
+	reset_value = 0x00;
+	write_register(&hspi1, dynpd_reg, &reset_value, 1);
+	write_register(&hspi1, feature_reg, &reset_value, 1);
 
-	read_register(&hspi1, config_reg, &config_reg_bits, 1);
-
-	uint8_t en_rxaddr_bits = 0;
-	read_register(&hspi1, en_rxaddr_reg, &en_rxaddr_bits, 1);
-
-	en_rxaddr_bits |= ERX_P0;
-	write_register(&hspi1, en_rxaddr_reg, &en_rxaddr_bits, 1);
-
-	uint8_t en_aa_reg_bits = 0;
-	read_register(&hspi1, en_aa_reg, &en_aa_reg_bits, 1);
-
-	en_aa_reg_bits |= (1 << 0);
-	write_register(&hspi1, en_aa_reg, &en_aa_reg_bits, 1);
-
-
-
-	uint8_t payload_length = 0x03; //payload length is 3 byte.
-	write_register(&hspi1, rx_pw_p0_reg, &payload_length, 1);
-
-
-	//RF CH settings
-	uint8_t rf_channel_bits = 0;
-	command = READ_RF_CH_REG;
-	read_register(&hspi1, rf_ch_reg, &rf_channel_bits, 1);
-
-	//setting the rf_ch bits
-	rf_channel_bits |= 0x64;
-	write_register(&hspi1, rf_ch_reg, &rf_channel_bits, 1);
-
-
-
-	//AIR DATA RATE
-	uint8_t rf_setup_reg_bits = 0;
-	read_register(&hspi1, rf_setup_reg, &rf_setup_reg_bits, 1);
-
-	//air data rate.
-	rf_setup_reg_bits |= 0x06;
-	write_register(&hspi1, rf_setup_reg, &rf_setup_reg_bits, 1);
-
-	//setting up crc
-	config_reg_bits |= CRCO | EN_CRC;
-	write_register(&hspi1, config_reg, &config_reg_bits, 1);
-
-
-	//Set the AW register. We determine that we want the address to be 3 bytes.
-	//Set the AW register
-	//Set the AW register
-	uint8_t three_bytes = 1;
-	uint8_t four_bytes = 2;
-	uint8_t five_bytes = 3;
-	write_register(&hspi1, aw_reg, &five_bytes, 1);
-
-
-	//SET THE TX address
-	uint8_t rx_addr[5] = {0x77, 0x35, 0xF0, 0xD3, 0xE7};
-
-	//SET RX address
-	write_register(&hspi1, rx_addr_p0_reg, rx_addr, 5);
-
-	uint8_t set_retr_reg_bits = 0;
-	read_register(&hspi1, setup_retr_reg, &set_retr_reg_bits, 1);
-
-
-//	//set up the number of retransmits and the auto retransmit delay
-	uint8_t arc_bits = 0x03;
-	uint8_t ard_bits = 0x00;
-	set_retr_reg_bits |= (ard_bits << 0) | arc_bits;
-	command = WRITE_SETUP_RETR_REG;
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
-	HAL_SPI_Transmit(&hspi1, &command, 1, 100);
-	HAL_SPI_Transmit(&hspi1, &set_retr_reg_bits, 1, 100);
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
-
-//
-//	command = READ_EN_AA_REG;
-
-
-
+	rf_module.send_spi_command(flush_rx_fifo);
+	rf_module.send_spi_command(flush_tx_fifo);
 
 
 	printf("RX\n");
 
+	uint8_t reg_value = 0;
 
-//	uint8_t rx_address_read_0[5];
-//	read_register(&hspi1, rx_addr_p0_reg, rx_address_read_0, 5);
-//	for (int i = 0; i < 5; i++) {
-//		printf("RX Address_0 Byte %d\n", rx_address_read_0[i]);
-//	}
+	uint8_t rx_addr[5] = {0x34, 0x35, 0xF0, 0xD3, 0xE4};
+	rf_module.nrf_init(2480, KBPS_250, FIVE_BYTES);
+	rf_module.setup_rx_mode(rx_addr, 5, 0, 0, 3);
+
+
+
+
+
 //
-//	uint8_t rx_address_read_1[5];
-//	read_register(&hspi1, rx_addr_p1_reg, rx_address_read_1, 5);
-//	for (int i = 0; i < 5; i++) {
-//		printf("RX Address_1 Byte %d\n", rx_address_read_1[i]);
-//	}
+//	read_register(&hspi1, status_reg, &reg_value, 1);
+//	printf("The status_reg is %d\n", reg_value);
 //
-//	uint8_t rx_address_read_2[5];
-//	read_register(&hspi1, rx_addr_p2_reg, rx_address_read_2, 5);
-//	for (int i = 0; i < 5; i++) {
-//		printf("RX Address_2 Byte %d\n", rx_address_read_2[i]);
-//	}
+//	read_register(&hspi1, config_reg, &reg_value, 1);
+//	printf("The config register is %d\n", reg_value);
 //
-//	uint8_t rx_address_read_3[5];
-//	read_register(&hspi1, rx_addr_p3_reg, rx_address_read_3, 5);
-//	for (int i = 0; i < 5; i++) {
-//		printf("RX Address Byte_3 %d\n", rx_address_read_3[i]);
-//	}
+//	read_register(&hspi1, aw_reg, &reg_value, 1);
+//	printf("The aw_reg is %d\n", reg_value);
 //
-//	uint8_t rx_address_read_4[5];
-//	read_register(&hspi1, rx_addr_p4_reg, rx_address_read_4, 5);
-//	for (int i = 0; i < 5; i++) {
-//		printf("RX Address Byte_4 %d\n", rx_address_read_4[i]);
-//	}
+//	read_register(&hspi1, setup_retr_reg, &reg_value, 1);
+//	printf("The setup_retr_reg is %d\n", reg_value);
 //
-//	uint8_t rx_address_read_5[5];
-//	read_register(&hspi1, rx_addr_p5_reg, rx_address_read_5, 5);
-//	for (int i = 0; i < 5; i++) {
-//		printf("RX Address Byte_5 %d\n", rx_address_read_5[i]);
-//	}
-
-	read_register(&hspi1, en_aa_reg, &en_aa_reg_bits, 1);
-	read_register(&hspi1, en_rxaddr_reg, &en_rxaddr_bits, 1);
-	uint8_t aw_reg_bits = 0;
-	read_register(&hspi1, aw_reg, &aw_reg_bits, 1);
-	read_register(&hspi1, setup_retr_reg, &set_retr_reg_bits, 1);
-	read_register(&hspi1, rf_ch_reg, &rf_channel_bits, 1);
-	read_register(&hspi1, rf_setup_reg, &rf_setup_reg_bits, 1);
-	uint8_t status_reg_bits = 0;
-	read_register(&hspi1, status_reg, &status_reg_bits, 1);
-
-	uint8_t pl_length_0 = 0; //payload length is 3 byte.
-	uint8_t pl_length_1 = 0;
-	uint8_t pl_length_2 = 0;
-	uint8_t pl_length_3 = 0;
-	uint8_t pl_length_4 = 0;
-	uint8_t pl_length_5 = 0;
-
-	read_register(&hspi1, rx_pw_p0_reg, &pl_length_0, 1);
-	read_register(&hspi1, rx_pw_p1_reg, &pl_length_1, 1);
-	read_register(&hspi1, rx_pw_p2_reg, &pl_length_2, 1);
-	read_register(&hspi1, rx_pw_p3_reg, &pl_length_3, 1);
-	read_register(&hspi1, rx_pw_p4_reg, &pl_length_4, 1);
-	read_register(&hspi1, rx_pw_p5_reg, &pl_length_5, 1);
+//	read_register(&hspi1, rf_ch_reg, &reg_value, 1);
+//	printf("The rf_ch_reg is %d\n", reg_value);
+//
+//	read_register(&hspi1, rf_setup_reg, &reg_value, 1);
+//	printf("The rf_setup_reg is %d\n", reg_value);
+//
+//	rf_module.check_fifo_status(reg_value);
+//	printf("The value of fifo_status is is %d\n", reg_value);
+//
+//	read_register(&hspi1, en_rxaddr_reg, &reg_value, 1);
+//	printf("The value of en_rxaddr_reg is %d\n", reg_value);
+//
+//	read_register(&hspi1, en_aa_reg, &reg_value, 1);
+//	printf("The value of en_aa_reg is %d\n", reg_value);
 
 
-//	printf("EN_AA reg is %d\n", en_aa_reg_bits);
-//	printf("EN_RXADDR reg is %d\n", en_rxaddr_bits);
-//	printf("AW reg bits is %d\n", aw_reg_bits);
-//	printf("SETUP_RETR reg bits %d\n", set_retr_reg_bits);
-//	printf("RF CH bits %d\n", rf_channel_bits);
-//	printf("RF_SETUP reg is %d\n", rf_setup_reg_bits);
-//	printf("Status reg %d\n", status_reg_bits);
-//	printf("The config reg is %d\n", config_reg_bits);
 
-//	printf("The payload length 1 is %d\n", pl_length_1);
-//	printf("The payload length 2 is %d\n", pl_length_2);
-//	printf("The payload length 3 is %d\n", pl_length_3);
-//	printf("The payload length 4 is %d\n", pl_length_4);
-//	printf("The payload length 5 is %d\n", pl_length_5);
+//
+//
+//
+//	  //set the CE pin high.
+//	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
 
 
 
 
-
-
-
-	  //set the CE pin high.
-	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
-
-
-
-
-
-	  uint8_t status_test = 0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -488,46 +291,12 @@ int main(void)
 //	    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
 
 
-
-	  if (data_received) {
-		  uint8_t comm = R_RX_PAYLOAD;
-
-		  uint8_t come_now[3];
-		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
-		  HAL_SPI_Transmit(&hspi1, &comm, 1, 10);
-
-		  HAL_SPI_Receive(&hspi1, come_now, 3, 10);
-		  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
-		  printf("The received payload is %d %d %d\n", come_now[0], come_now[1], come_now[2]);
-		  data_received = 0;
-	  }
+	  	read_register(&hspi1, config_reg, &reg_value, 1);
+	  	printf("The config register is %d\n", reg_value);
 
 
 
-	  read_register(&hspi1, status_reg, &status_test ,1);
-
-	  if (status_test & 0x40) {
-		  status_test |= 0x40;
-		  printf("Clearing RX_DR\n");
-	  }
-
-	  if (status_test & 0x04) {
-		  status_test |= 0x04;
-		  printf("Clearing Max RT\n");
-	  }
-
-	  write_register(&hspi1, status_reg, &status_test ,1);
-
-	  read_register(&hspi1, status_reg, &status_test, 1);
-	  printf("The value of status_test is %d and the receive status is %d\n", status_test, data_received);
-
-	  write_register(&hspi1, status_reg, &status_test ,1);
-
-
-
-
-
-	  HAL_Delay(10);
+	  HAL_Delay(1000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -577,13 +346,6 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-	if (GPIO_Pin == GPIO_PIN_9) {
-		data_received = 1;
-		printf("Inside interrupt\n");
-	}
-}
 
 /* USER CODE END 4 */
 
