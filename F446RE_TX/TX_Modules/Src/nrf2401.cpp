@@ -330,7 +330,6 @@ bool NRF2401::get_operating_mode() {
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	if(GPIO_Pin == GPIO_PIN_9) {
-		printf("Enter interrupt\n");
 		if (rf_module.get_operating_mode() == true) { //tx mode
 			tx_interrupt = 1;
 		} else {						//false

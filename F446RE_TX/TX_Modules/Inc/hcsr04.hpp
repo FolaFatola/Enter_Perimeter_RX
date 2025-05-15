@@ -79,7 +79,7 @@ public:
 	 * Param(s):
 	 * input_params -> reference to an instance of the struct DistCaptParams.
 	 *
-	 * return value: Double -> the distance of an object from the sensor in cm.
+	 * return value: uint16_t -> the distance of an object from the sensor in cm.
 	 */
 	double getDistance(volatile DistCaptParams &input_params);
 

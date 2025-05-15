@@ -46,7 +46,6 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-constexpr uint8_t detection_distance = 20;
 
 /* USER CODE END PM */
 
@@ -103,30 +102,27 @@ int main(void)
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 //
-//  HAL_TIM_Base_Start(&htim1);
-//  HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);
+  HAL_TIM_Base_Start(&htim1);
+  HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);
 
   uint8_t tx_addr[5] = {0x34, 0x35, 0xF0, 0xD3, 0xE4};
   rf_module.nrf_init(2500, MBPS_ONE, FIVE_BYTES);
   rf_module.setup_tx_mode(tx_addr, 5);
 
-  uint8_t motion_data[3] = {1, 2, 3};
+  uint8_t motion_data[5] = {0, 0, 0, 0, 0};
+
+
+  uint16_t distance_cm = 0;
+  uint8_t seconds = 0;
+  uint8_t minutes = 0;
+  uint8_t hours = 0;
 //
-//  double distance = 0;
-//
-//  uint8_t seconds = 0;
-//  uint8_t minutes = 0;
-//  uint8_t hours = 0;
-//
-//  Time_RTC rtc_sensor_time{&hi2c1, true, 25, 18, 6, TUESDAY, 13, MAY, 25};
-//  rtc_sensor_time.rtc_init();
+  Time_RTC rtc_sensor_time{&hi2c1, true, 25, 18, 6, TUESDAY, 13, MAY, 25};
+  rtc_sensor_time.rtc_init();
 
   uint8_t tx_ds_irq = (1 << 5);
   uint8_t max_rt_irq = (1 << 4);
   uint8_t status_register_byte = 0;
-  uint8_t fifo_status_bytes = 0;
-
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -138,46 +134,31 @@ int main(void)
 		  rf_module.read_register(status_reg, &status_register_byte, 1);
 		  if (status_register_byte & tx_ds_irq) {
 			  status_register_byte |= tx_ds_irq; //TX_DS clear
-			  printf("Clear\n");
 		  } else if (status_register_byte & max_rt_irq) {
 			  status_register_byte |= max_rt_irq;
-			  printf("Max RT\n");
 		  }
 
-		  rf_module.read_register(fifo_status_reg, &fifo_status_bytes, 1);
-		  printf("The fifo status is %d\n", fifo_status_bytes);
 		  rf_module.write_register(status_reg, &status_register_byte, 1);
 		  tx_interrupt = 0;
 	  }
 
 	  //TODO: Clean up main, use a more interrupt driven model for nrf2401 and make use of FREERTOS??
-//	  distance_sensor.send_trig_pulse();
-//	  HAL_Delay(60);
-//	  distance = distance_sensor.getDistance(g_dist_capt_params);
-//  	  printf("The distance is %lf\n", distance);
-////
-//  	  rtc_sensor_time.rtc_get_time_unit(SECONDS, seconds);
-//  	  rtc_sensor_time.rtc_get_time_unit(MINUTES, minutes);
-//  	  rtc_sensor_time.rtc_get_time_unit(HOURS, hours);
-//
-//  	 motion_data[0] = seconds;
-//  	 motion_data[1] = minutes;
-//  	 motion_data[2] = hours;
-  	 rf_module.send_data_tx_to_fifo(motion_data, 3);
+	  distance_sensor.send_trig_pulse();
+	  HAL_Delay(60);
+	  distance_cm = distance_sensor.getDistance(g_dist_capt_params);
 
 
-//  	  if (distance < detection_distance) { //If someone is less than detection_distance centimeters away from motion detector, then....
-//  		  motion_data[0] = seconds;
-//  		  motion_data[1] = minutes;
-//  		  motion_data[2] = hours;
-//  	  }
-//
-//  	  if (distance < 100) {
-//
-//
-//  	  }
+	  rtc_sensor_time.rtc_get_time_unit(SECONDS, seconds);
+	  rtc_sensor_time.rtc_get_time_unit(MINUTES, minutes);
+	  rtc_sensor_time.rtc_get_time_unit(HOURS, hours);
 
-
+	  motion_data[0] = seconds;
+	  motion_data[1] = minutes;
+	  motion_data[2] = hours;
+	  //send the uint16_t distance in two bytes: The lower and upper byte.
+	  motion_data[3] = (distance_cm & 0x00FF);			//lower byte
+	  motion_data[4] = (distance_cm & 0xFF00) >> 8;		//upper byte.
+	  rf_module.send_data_tx_to_fifo(motion_data, 5);
 
 	  HAL_Delay(100);
 

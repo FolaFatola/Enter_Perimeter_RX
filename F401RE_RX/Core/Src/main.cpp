@@ -36,7 +36,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-constexpr uint8_t detection_distance = 20;
+constexpr uint8_t detection_distance_cm = 20;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -95,14 +95,13 @@ int main(void)
 
   uint8_t rx_addr[5] = {0x34, 0x35, 0xF0, 0xD3, 0xE4};
   rf_module.nrf_init(2500, MBPS_ONE, FIVE_BYTES);
-  rf_module.setup_rx_mode(rx_addr, 5, 0, 3);
+  rf_module.setup_rx_mode(rx_addr, 5, 0, 5);
 
 
-//  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
-//  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
 
-
-  uint8_t motion_detection_information[3] = {0, 0, 0};
+  uint8_t motion_detection_information[5] = {0, 0, 0, 0, 0};
   uint8_t status_register_byte = 0;
 
   uint8_t rx_dr_irq = (1 << 6);
@@ -130,8 +129,24 @@ int main(void)
 		  }
 		  rf_module.write_register(status_reg, &status_register_byte, 1);
 
-		  printf("Motion was detected at around: %d:%d:%d", motion_detection_information[2],
-							  motion_detection_information[1], motion_detection_information[0]);
+		  uint8_t upper_distance_byte = motion_detection_information[4];
+		  uint8_t lower_distance_byte = motion_detection_information[3];
+
+		  uint16_t distance_cm = (upper_distance_byte << 8) + lower_distance_byte;
+		  uint8_t hours = motion_detection_information[2];
+		  uint8_t minutes = motion_detection_information[1];
+		  uint8_t seconds = motion_detection_information[0];
+
+		  printf("Motion was detected at around: %d hours : %d minutes : %d seconds\n", hours,
+				  minutes, seconds);
+
+		  printf("The distance is %d\n", distance_cm);
+
+		  if (distance_cm < detection_distance_cm) {
+			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
+		  } else {
+			  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_RESET);
+		  }
 
 		  rx_data_received = 0;
 	  }

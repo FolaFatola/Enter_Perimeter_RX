@@ -75,3 +75,16 @@ double HC_SR04::getDistance(volatile DistCaptParams &input_params) {
 	return distance_;
 }
 
+
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {
+	if (htim->Instance == TIM2) {
+		if (!g_dist_capt_params.recv_first_edge_) {
+			g_dist_capt_params.ic_val1_ = htim->Instance->CCR2;
+			g_dist_capt_params.recv_first_edge_ = true;
+		} else {
+			g_dist_capt_params.ic_val2_ = htim->Instance->CCR2;
+			g_dist_capt_params.recv_first_edge_ = false;
+		}
+	}
+}
+
