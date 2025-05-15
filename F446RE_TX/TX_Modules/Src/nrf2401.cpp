@@ -43,7 +43,7 @@ void NRF2401::nrf_reset() {
 	uint8_t reset_value = 0x08;
 	write_register(config_reg, &reset_value, 1);
 
-	reset_value = 0x3F;
+	reset_value = 0x00;
 	write_register(en_aa_reg, &reset_value, 1);
 
 	reset_value = 0x03;
@@ -139,7 +139,6 @@ void NRF2401::set_rf_channel_frequency(uint16_t ch_freq_mhz) {
 		return;
 	}
 	uint8_t rf_ch_value = ch_freq_mhz - LOWEST_RF_CHANNEL_FREQUENCY;
-	printf("The rf_ch_value is %d\n", rf_ch_value);
 	uint8_t rf_ch_reg_bits = 0;
 	read_register(rf_ch_reg, &rf_ch_reg_bits, 1);
 	rf_ch_reg_bits = rf_ch_value;
@@ -231,31 +230,24 @@ void NRF2401::nrf_init(uint16_t rf_ch_frequency, DATA_RATE data_rate, ADDR_WIDTH
 	nrf_power_on();
 	enable_crc(false);
 	set_rf_channel_frequency(rf_ch_frequency);
-	set_air_data_rate(KBPS_250);
+	set_air_data_rate(data_rate);
 	set_address_width(width);
-	set_auto_retransmit(10, 500);
+	set_auto_retransmit(0, 250);
 }
 
 void NRF2401::setup_tx_mode(uint8_t *address, uint8_t address_length_bytes) {
 	operating_mode_ = true;
 //	set_tx_address(address, address_length_bytes);
 	nrf_set_prim_rx();
-	HAL_GPIO_WritePin(ce_pin_port_, ce_pin_, GPIO_PIN_SET);
 //	send_spi_command(flush_tx_fifo);
 }
 
-void NRF2401::setup_receiver_channel(uint8_t enable_auto_acknowledge_pipe_x, uint8_t enable_rx_addr_pipe_x) {
+void NRF2401::setup_receiver_channel(uint8_t enable_rx_addr_pipe_x) {
 	uint8_t en_rxaddr_bits = 0;
 	read_register(en_rxaddr_reg, &en_rxaddr_bits, 1);
 
 	en_rxaddr_bits |= (1 << enable_rx_addr_pipe_x);
 	write_register(en_rxaddr_reg, &en_rxaddr_bits, 1);
-
-	uint8_t en_aa_reg_bits = 0;
-	read_register(en_aa_reg, &en_aa_reg_bits, 1);
-
-	en_aa_reg_bits |= (1 << enable_auto_acknowledge_pipe_x);
-	write_register(en_aa_reg, &en_aa_reg_bits, 1);
 }
 
 void NRF2401::set_tx_address(uint8_t *address, uint8_t address_length_bytes) {
@@ -280,9 +272,9 @@ void NRF2401::set_rx_address(uint8_t *address, uint8_t address_length_bytes, uin
 }
 
 
-void NRF2401::setup_rx_mode(uint8_t *address, uint8_t address_length_bytes, uint8_t enable_auto_acknowledge_pipe_x,
+void NRF2401::setup_rx_mode(uint8_t *address, uint8_t address_length_bytes,
 		uint8_t enable_rx_addr_pipe_x, uint8_t payload_length) {
-	setup_receiver_channel(enable_auto_acknowledge_pipe_x, enable_rx_addr_pipe_x);
+	setup_receiver_channel(enable_rx_addr_pipe_x);
 //	set_rx_address(address, address_length_bytes, enable_rx_addr_pipe_x);
 	set_data_pipe_payload_length(payload_length, enable_rx_addr_pipe_x);
 	nrf_set_prim_rx();
@@ -324,6 +316,10 @@ void NRF2401::send_data_tx_to_fifo(uint8_t *tx_data, uint8_t payload_length) {
 	HAL_SPI_Transmit(spi_handle_, &write_tx_fifo, 1, 100);
 	HAL_SPI_Transmit(spi_handle_, tx_data, payload_length, 100);
 	HAL_GPIO_WritePin(cs_pin_port_, cs_pin_, GPIO_PIN_SET);
+	HAL_Delay(5);
+	HAL_GPIO_WritePin(ce_pin_port_, ce_pin_, GPIO_PIN_SET);
+	HAL_Delay(1);
+	HAL_GPIO_WritePin(ce_pin_port_, ce_pin_, GPIO_PIN_RESET);
 }
 
 bool NRF2401::get_operating_mode() {
@@ -334,11 +330,11 @@ bool NRF2401::get_operating_mode() {
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	if(GPIO_Pin == GPIO_PIN_9) {
+		printf("Enter interrupt\n");
 		if (rf_module.get_operating_mode() == true) { //tx mode
-			tx_interrupt = 0;
+			tx_interrupt = 1;
 		} else {						//false
 			rx_data_received = 1;
 		}
-
 	}
 }

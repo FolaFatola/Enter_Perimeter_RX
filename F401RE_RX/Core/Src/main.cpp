@@ -18,7 +18,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "i2c.h"
 #include "spi.h"
 #include "usart.h"
 #include "gpio.h"
@@ -26,7 +25,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <cstdio>
-#include "rtc.hpp"
 #include <stdio.h>
 #include "nrf2401.hpp"
 /* USER CODE END Includes */
@@ -38,13 +36,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-//register commands
-constexpr uint8_t write = 0x20;
-constexpr uint8_t read = 0x0;
-
-volatile uint8_t data_received = 0;
-
-
+constexpr uint8_t detection_distance = 20;
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -66,26 +58,6 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void write_register(SPI_HandleTypeDef *spi_handle, uint8_t *write_data, uint8_t write_bytes);
-void read_register(SPI_HandleTypeDef *spi_handle, uint8_t *read_data, uint8_t read_bytes);
-
-void write_register(SPI_HandleTypeDef *spi_handle, uint8_t reg, uint8_t *write_data, uint8_t write_bytes) {
-	uint8_t write_reg = write | reg;
-  	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
-	HAL_SPI_Transmit(spi_handle, &write_reg, 1, 100);
-	HAL_SPI_Transmit(spi_handle, write_data, write_bytes, 100);
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
-}
-
-void read_register(SPI_HandleTypeDef *spi_handle, uint8_t reg, uint8_t *read_data, uint8_t read_bytes) {
-	uint8_t read_reg = read | reg;
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_RESET);
-	HAL_SPI_Transmit(spi_handle, &read_reg, 1, 100);
-	HAL_SPI_Receive(spi_handle, read_data, read_bytes, 100);
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, GPIO_PIN_SET);
-}
-
-
 /* USER CODE END 0 */
 
 /**
@@ -117,30 +89,20 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_I2C2_Init();
   MX_USART2_UART_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
-	bool use_tfh_time = true;
-	uint8_t seconds = 2;
-	uint8_t minutes = 0;
-	uint8_t hours = 6;
-	uint8_t weekday = SATURDAY;
-	uint8_t date_day = 12;
-	uint8_t month = APRIL;
-	uint8_t year = 25;
-
-	Time_RTC rtc_sensor_time{&hi2c2, use_tfh_time, seconds, minutes, hours, weekday, date_day, month, year};
-	rtc_sensor_time.rtc_init();
-
-	printf("RX\n");
-
 
   uint8_t rx_addr[5] = {0x34, 0x35, 0xF0, 0xD3, 0xE4};
-  rf_module.nrf_init(2480, KBPS_250, FIVE_BYTES);
-  rf_module.setup_rx_mode(rx_addr, 5, 0, 0, 3);
+  rf_module.nrf_init(2500, MBPS_ONE, FIVE_BYTES);
+  rf_module.setup_rx_mode(rx_addr, 5, 0, 3);
 
-  uint8_t rx_data[3] = {0, 0, 0};
+
+//  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_3, GPIO_PIN_SET);
+//  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+
+
+  uint8_t motion_detection_information[3] = {0, 0, 0};
   uint8_t status_register_byte = 0;
 
   uint8_t rx_dr_irq = (1 << 6);
@@ -154,38 +116,10 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
-  //	  rtc_sensor_time.rtc_get_time_unit(SECONDS, seconds);
-  //	  rtc_sensor_time.rtc_get_time_unit(MINUTES, minutes);
-  //	  rtc_sensor_time.rtc_get_time_unit(HOURS, hours);
-  //	  rtc_sensor_time.rtc_get_time_unit(WEEK_DAY, weekday);
-  //	  rtc_sensor_time.rtc_get_time_unit(DATE_DAY, date_day);
-  //	  rtc_sensor_time.rtc_get_time_unit(MONTH, month);
-  //	  rtc_sensor_time.rtc_get_time_unit(YEAR, year);
-  //
-  //	  HAL_UART_Transmit(&huart2, (uint8_t *)message, sprintf(message, "Seconds: %d, Minutes: %d, Hours: %d, "
-  //			  "Week_Day: %d, Date_Day %d, Month %d, Year %d\r\n",
-  //			  seconds, minutes, hours, weekday, date_day, month, year+millennium), 100);
-
-//		  printf("The config reg status is %d\n", read_config_bits);
-//		  printf("The feature reg status is %d\n", read_feature_reg_bits);
-//		  printf("The AW reg status is %d\n", read_aw_reg_bits);
-//		  printf("The RX_ADDR reg status is %d\n", rx_address);
-//		  printf("The TX_ADDR reg status is %d\n", tx_address);
-//		  printf("The set_retr reg status is %d\n", read_set_retr_reg_bits);
-//		  printf("The rf_setup_reg value is %d\n", read_rf_setup_bits);
-//		  printf("The rf_ch reg value is %d\n", read_rf_channel_bits);
-
-//		//Receive the data
-//	   		printf("%d\n", receive_payload);
-//	    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
-
-
 	  if (rx_data_received) {
 		  rf_module.read_register(status_reg, &status_register_byte, 1);
 		  if (status_register_byte & rx_dr_irq) { 	//data is ready.
-			  rf_module.receive_data_from_rx_fifo(rx_data);
-			  printf("The receiver data is %d %d %d\n", rx_data[0], rx_data[1], rx_data[2]);
+			  rf_module.receive_data_from_rx_fifo(motion_detection_information);
 			  status_register_byte |= rx_dr_irq;
 		  }
 
@@ -194,9 +128,12 @@ int main(void)
 		  } else if (status_register_byte & max_rt_irq) {
 			  status_register_byte |= max_rt_irq;
 		  }
+		  rf_module.write_register(status_reg, &status_register_byte, 1);
+
+		  printf("Motion was detected at around: %d:%d:%d", motion_detection_information[2],
+							  motion_detection_information[1], motion_detection_information[0]);
 
 		  rx_data_received = 0;
-		  rf_module.write_register(status_reg, &status_register_byte, 1);
 	  }
 
 
@@ -250,7 +187,16 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+//void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+//{
+//	if(GPIO_Pin == GPIO_PIN_9) {
+//		if (rf_module.get_operating_mode() == true) { //tx mode
+//			tx_interrupt = 1;
+//		} else {						//false
+//			rx_data_received = 1;
+//		}
+//	}
+//}
 /* USER CODE END 4 */
 
 /**

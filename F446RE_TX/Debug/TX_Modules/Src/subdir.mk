@@ -5,13 +5,22 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
-../TX_Modules/Src/nrf2401.cpp 
+../TX_Modules/Src/hcsr04.cpp \
+../TX_Modules/Src/nrf2401.cpp \
+../TX_Modules/Src/rtc.cpp \
+../TX_Modules/Src/timeunit.cpp 
 
 OBJS += \
-./TX_Modules/Src/nrf2401.o 
+./TX_Modules/Src/hcsr04.o \
+./TX_Modules/Src/nrf2401.o \
+./TX_Modules/Src/rtc.o \
+./TX_Modules/Src/timeunit.o 
 
 CPP_DEPS += \
-./TX_Modules/Src/nrf2401.d 
+./TX_Modules/Src/hcsr04.d \
+./TX_Modules/Src/nrf2401.d \
+./TX_Modules/Src/rtc.d \
+./TX_Modules/Src/timeunit.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
@@ -21,7 +30,7 @@ TX_Modules/Src/%.o TX_Modules/Src/%.su TX_Modules/Src/%.cyclo: ../TX_Modules/Src
 clean: clean-TX_Modules-2f-Src
 
 clean-TX_Modules-2f-Src:
-	-$(RM) ./TX_Modules/Src/nrf2401.cyclo ./TX_Modules/Src/nrf2401.d ./TX_Modules/Src/nrf2401.o ./TX_Modules/Src/nrf2401.su
+	-$(RM) ./TX_Modules/Src/hcsr04.cyclo ./TX_Modules/Src/hcsr04.d ./TX_Modules/Src/hcsr04.o ./TX_Modules/Src/hcsr04.su ./TX_Modules/Src/nrf2401.cyclo ./TX_Modules/Src/nrf2401.d ./TX_Modules/Src/nrf2401.o ./TX_Modules/Src/nrf2401.su ./TX_Modules/Src/rtc.cyclo ./TX_Modules/Src/rtc.d ./TX_Modules/Src/rtc.o ./TX_Modules/Src/rtc.su ./TX_Modules/Src/timeunit.cyclo ./TX_Modules/Src/timeunit.d ./TX_Modules/Src/timeunit.o ./TX_Modules/Src/timeunit.su
 
 .PHONY: clean-TX_Modules-2f-Src
 

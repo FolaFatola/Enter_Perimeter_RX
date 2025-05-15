@@ -1,0 +1,7 @@
+../TX_Modules/Src/hcsr04.cpp:28:1:HC_SR04::HC_SR04(GPIO_TypeDef*, uint16_t, TIM_HandleTypeDef*, TIM_HandleTypeDef*)	24	static
+../TX_Modules/Src/hcsr04.cpp:35:6:void HC_SR04::delay_microseconds(uint8_t)	24	static
+../TX_Modules/Src/hcsr04.cpp:46:6:void HC_SR04::send_trig_pulse()	16	static
+../TX_Modules/Src/hcsr04.cpp:54:6:void HC_SR04::update_dist_capt_params(volatile DistCaptParams&)	16	static
+../TX_Modules/Src/hcsr04.cpp:60:8:double HC_SR04::getDistance(volatile DistCaptParams&)	48	static
+../TX_Modules/Src/hcsr04.cpp:76:1:void __static_initialization_and_destruction_0(int, int)	24	static
+../TX_Modules/Src/hcsr04.cpp:76:1:cpp)	8	static

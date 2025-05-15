@@ -19,14 +19,18 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "spi.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
+#include "i2c.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <cstdio>
 #include <stdio.h>
 #include "nrf2401.hpp"
+#include "hcsr04.hpp"
+#include "rtc.hpp"
 
 /* USER CODE END Includes */
 
@@ -38,11 +42,11 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
-
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
+constexpr uint8_t detection_distance = 20;
 
 /* USER CODE END PM */
 
@@ -93,47 +97,90 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_SPI1_Init();
+  MX_TIM1_Init();
   MX_USART2_UART_Init();
+  MX_TIM2_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
-
-	//when due to voltage being above 1.9V, we are currently in power down mode.
-
-	//PB6 is the CS PIN. PC7 is CE pin, and PA9 is for the external interrupt.
-
+//
+//  HAL_TIM_Base_Start(&htim1);
+//  HAL_TIM_IC_Start_IT(&htim2, TIM_CHANNEL_2);
 
   uint8_t tx_addr[5] = {0x34, 0x35, 0xF0, 0xD3, 0xE4};
-  rf_module.nrf_init(2480, KBPS_250, FIVE_BYTES);
+  rf_module.nrf_init(2500, MBPS_ONE, FIVE_BYTES);
   rf_module.setup_tx_mode(tx_addr, 5);
 
+  uint8_t motion_data[3] = {1, 2, 3};
+//
+//  double distance = 0;
+//
+//  uint8_t seconds = 0;
+//  uint8_t minutes = 0;
+//  uint8_t hours = 0;
+//
+//  Time_RTC rtc_sensor_time{&hi2c1, true, 25, 18, 6, TUESDAY, 13, MAY, 25};
+//  rtc_sensor_time.rtc_init();
 
-  uint8_t tx_data[3] = {1, 2, 3};
   uint8_t tx_ds_irq = (1 << 5);
   uint8_t max_rt_irq = (1 << 4);
-
   uint8_t status_register_byte = 0;
+  uint8_t fifo_status_bytes = 0;
+
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1) {
-	  for (int i = 0; i < 3; ++i) {
-		  tx_data[i]++;
-	  }
-	  rf_module.send_data_tx_to_fifo(tx_data, 3);
+  while (1)
+  {
 
 	  if (tx_interrupt) {
 		  rf_module.read_register(status_reg, &status_register_byte, 1);
 		  if (status_register_byte & tx_ds_irq) {
 			  status_register_byte |= tx_ds_irq; //TX_DS clear
-		  } else {
+			  printf("Clear\n");
+		  } else if (status_register_byte & max_rt_irq) {
 			  status_register_byte |= max_rt_irq;
+			  printf("Max RT\n");
 		  }
-		 rf_module.write_register(status_reg, &status_register_byte, 1);
-		 tx_interrupt = 0;
+
+		  rf_module.read_register(fifo_status_reg, &fifo_status_bytes, 1);
+		  printf("The fifo status is %d\n", fifo_status_bytes);
+		  rf_module.write_register(status_reg, &status_register_byte, 1);
+		  tx_interrupt = 0;
 	  }
 
-	  HAL_Delay(1000);
+	  //TODO: Clean up main, use a more interrupt driven model for nrf2401 and make use of FREERTOS??
+//	  distance_sensor.send_trig_pulse();
+//	  HAL_Delay(60);
+//	  distance = distance_sensor.getDistance(g_dist_capt_params);
+//  	  printf("The distance is %lf\n", distance);
+////
+//  	  rtc_sensor_time.rtc_get_time_unit(SECONDS, seconds);
+//  	  rtc_sensor_time.rtc_get_time_unit(MINUTES, minutes);
+//  	  rtc_sensor_time.rtc_get_time_unit(HOURS, hours);
+//
+//  	 motion_data[0] = seconds;
+//  	 motion_data[1] = minutes;
+//  	 motion_data[2] = hours;
+  	 rf_module.send_data_tx_to_fifo(motion_data, 3);
+
+
+//  	  if (distance < detection_distance) { //If someone is less than detection_distance centimeters away from motion detector, then....
+//  		  motion_data[0] = seconds;
+//  		  motion_data[1] = minutes;
+//  		  motion_data[2] = hours;
+//  	  }
+//
+//  	  if (distance < 100) {
+//
+//
+//  	  }
+
+
+
+	  HAL_Delay(100);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -183,7 +230,6 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
 
 /* USER CODE END 4 */
 

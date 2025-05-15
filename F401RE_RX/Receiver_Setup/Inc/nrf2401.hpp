@@ -36,7 +36,7 @@ public:
 	void nrf_init(uint16_t rf_ch_frequency, DATA_RATE data_rate, ADDR_WIDTH width);
 	void nrf_reset();
 	void setup_tx_mode(uint8_t *address, uint8_t address_length_bytes);
-	void setup_rx_mode(uint8_t *address, uint8_t address_length_bytes, uint8_t enable_auto_acknowledge_pipe_x,
+	void setup_rx_mode(uint8_t *address, uint8_t address_length_bytes,
 			uint8_t enable_rx_addr_pipe_x, uint8_t payload_length);
 
 
@@ -50,7 +50,7 @@ public:
 	void set_tx_address(uint8_t *address, uint8_t address_length_bytes);
 	void set_rx_address(uint8_t *address, uint8_t address_length_bytes, uint8_t data_pipe);
 	void set_auto_retransmit(uint8_t auto_retransmit_count, uint16_t auto_retransmit_delay_us);
-	void setup_receiver_channel(uint8_t enable_auto_acknowledge_pipe_x, uint8_t enable_rx_addr_pipe_x);
+	void setup_receiver_channel(uint8_t enable_rx_addr_pipe_x);
 	void set_data_pipe_payload_length(uint8_t payload_length, uint8_t rx_data_pipe);
 	void set_status(uint8_t bits);
 	void get_status(uint8_t &status_reg);

@@ -86,7 +86,7 @@ main-build: F446RE_TX.elf secondary-outputs
 
 # Tool invocations
 F446RE_TX.elf F446RE_TX.map: $(OBJS) $(USER_OBJS) /Users/folafatola/Github_Projects/Enter_Perimeter/F446RE_TX/STM32F446RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-g++ -o "F446RE_TX.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/folafatola/Github_Projects/Enter_Perimeter/F446RE_TX/STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="F446RE_TX.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
+	arm-none-eabi-g++ -o "F446RE_TX.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/folafatola/Github_Projects/Enter_Perimeter/F446RE_TX/STM32F446RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="F446RE_TX.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
